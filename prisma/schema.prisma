@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+model User {
+  id                 String      @id @default(cuid())
+  email              String      @unique
+  password           String
+  role               Role        @default(USER)
+  hashedRefreshToken String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  categories         Category[]
+  dayReviews         DayReview[]
+  habits             Habit[]
+  journals           Journal[]
+  moods              Mood[]
+  profile            Profile?
+  tasks              Task[]
+}
+
+model Profile {
+  id        String    @id @default(cuid())
+  fullName  String?
+  avatar    String?
+  birthday  DateTime?
+  gender    Gender?
+  theme     Theme     @default(LIGHT)
+  timezone  String    @default("Asia/Ho_Chi_Minh")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  color     String?
+  icon      String?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      TaskStatus @default(TODO)
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  userId      String
+  categoryId  String?
+  category    Category?  @relation(fields: [categoryId], references: [id])
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Habit {
+  id        String         @id @default(cuid())
+  name      String
+  frequency HabitFrequency
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  records   HabitRecord[]
+}
+
+model HabitRecord {
+  id          String   @id @default(cuid())
+  completedAt DateTime @default(now())
+  habitId     String
+  habit       Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+}
+
+model Mood {
+  id        String    @id @default(cuid())
+  level     MoodLevel
+  reason    String?
+  note      String?
+  createdAt DateTime  @default(now())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Journal {
+  id        String   @id @default(cuid())
+  title     String?
+  content   String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DayReview {
+  id           String   @id @default(cuid())
+  productivity Int
+  moodScore    Int
+  healthScore  Int
+  satisfaction Int
+  note         String?
+  reviewDate   DateTime
+  createdAt    DateTime @default(now())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reviewDate])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum MoodLevel {
+  VERY_HAPPY
+  HAPPY
+  NORMAL
+  SAD
+  VERY_SAD
+}
