@@ -63,3 +63,5 @@ pids
 
 # Prisma
 /server/generated/prisma
+.AGENT
+docs/
