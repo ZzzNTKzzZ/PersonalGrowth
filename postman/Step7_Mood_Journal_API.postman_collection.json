@@ -1,0 +1,271 @@
+{
+  "info": {
+    "name": "Step 7 - Mood & Journal API",
+    "description": "Postman collection to test the Mood and Journal endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Login (Get Token)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.accessToken) {",
+              "    pm.environment.set(\"access_token\", jsonData.accessToken);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Moods",
+      "item": [
+        {
+          "name": "1. Create Mood",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"mood_id\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"level\": \"HAPPY\",\n  \"reason\": \"Coding session\",\n  \"note\": \"Built the pagination feature\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/moods",
+              "host": ["{{base_url}}"],
+              "path": ["moods"]
+            }
+          }
+        },
+        {
+          "name": "2. Get All Moods",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/moods?startDate=2026-07-01&endDate=2026-07-31",
+              "host": ["{{base_url}}"],
+              "path": ["moods"],
+              "query": [
+                { "key": "startDate", "value": "2026-07-01" },
+                { "key": "endDate", "value": "2026-07-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Update Mood",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"level\": \"VERY_HAPPY\",\n  \"note\": \"It works flawlessly!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/moods/{{mood_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["moods", "{{mood_id}}"]
+            }
+          }
+        },
+        {
+          "name": "4. Delete Mood",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/moods/{{mood_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["moods", "{{mood_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Journals",
+      "item": [
+        {
+          "name": "1. Create Journal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"journal_id\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"First Entry\",\n  \"content\": \"Today I implemented cursor pagination. It was cool.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/journals",
+              "host": ["{{base_url}}"],
+              "path": ["journals"]
+            }
+          }
+        },
+        {
+          "name": "2. Get All Journals (Cursor Pagination)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.meta && jsonData.meta.nextCursor) {",
+                  "    pm.environment.set(\"next_cursor\", jsonData.meta.nextCursor);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/journals?limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["journals"],
+              "query": [
+                { "key": "limit", "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Get Journals Page 2",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/journals?limit=5&cursor={{next_cursor}}",
+              "host": ["{{base_url}}"],
+              "path": ["journals"],
+              "query": [
+                { "key": "limit", "value": "5" },
+                { "key": "cursor", "value": "{{next_cursor}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Get Journal By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/journals/{{journal_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["journals", "{{journal_id}}"]
+            }
+          }
+        },
+        {
+          "name": "5. Update Journal",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"First Entry (Updated)\",\n  \"content\": \"Added more details to the journal.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/journals/{{journal_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["journals", "{{journal_id}}"]
+            }
+          }
+        },
+        {
+          "name": "6. Delete Journal",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/journals/{{journal_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["journals", "{{journal_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
