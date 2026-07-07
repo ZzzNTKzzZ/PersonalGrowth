@@ -1,0 +1,312 @@
+{
+  "info": {
+    "name": "Habit Tracker API (Step 6)",
+    "description": "Collection để test tự động module Habit của Personal Growth Tracker",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "habit_id",
+      "value": ""
+    },
+    {
+      "key": "record_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Đăng ký",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Nếu lỗi conflict email (409) thì cũng không sao, pass qua step Đăng nhập",
+              "pm.test(\"Status code is 201 or 409\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"fullName\": \"Postman Test\",\r\n    \"email\": \"postman123@test.com\",\r\n    \"password\": \"Password123!\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/register",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "2. Đăng nhập",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200/201\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"access_token\", jsonData.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"postman123@test.com\",\r\n    \"password\": \"Password123!\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "3. Tạo Habit",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"habit_id\", jsonData.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Đọc sách 30 phút\",\r\n    \"frequency\": \"DAILY\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/habits",
+          "host": ["{{base_url}}"],
+          "path": ["habits"]
+        }
+      }
+    },
+    {
+      "name": "4. Lấy danh sách Habit",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/habits",
+          "host": ["{{base_url}}"],
+          "path": ["habits"]
+        }
+      }
+    },
+    {
+      "name": "5. Check-in Habit (Hôm nay)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "// Lưu record ID mới nhất vào biến",
+              "if (jsonData.records && jsonData.records.length > 0) {",
+              "    pm.collectionVariables.set(\"record_id\", jsonData.records[0].id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"completedAt\": \"{{$isoTimestamp}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/habits/{{habit_id}}/records",
+          "host": ["{{base_url}}"],
+          "path": ["habits", "{{habit_id}}", "records"]
+        }
+      }
+    },
+    {
+      "name": "6. Xem chi tiết thống kê",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/habits/{{habit_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["habits", "{{habit_id}}"]
+        }
+      }
+    },
+    {
+      "name": "7. Hủy Check-in Habit",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/habits/{{habit_id}}/records/{{record_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["habits", "{{habit_id}}", "records", "{{record_id}}"]
+        }
+      }
+    },
+    {
+      "name": "8. Cập nhật Habit",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Đọc sách 45 phút\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/habits/{{habit_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["habits", "{{habit_id}}"]
+        }
+      }
+    },
+    {
+      "name": "9. Xóa Habit",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/habits/{{habit_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["habits", "{{habit_id}}"]
+        }
+      }
+    }
+  ]
+}

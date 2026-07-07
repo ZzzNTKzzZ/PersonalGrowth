@@ -1,7 +1,13 @@
 # compiled output
-/dist
-/node_modules
-/build
+/server/dist
+/server/build
+/client/dist
+/client/build
+/client/.expo
+/client/web-build
+
+# dependencies
+node_modules/
 
 # Logs
 logs
@@ -10,7 +16,6 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
 
 # OS
 .DS_Store
@@ -18,9 +23,11 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+/server/coverage
+/client/coverage
 
 # IDEs and editors
-/.idea
+.idea/
 .project
 .classpath
 .c9/
@@ -41,6 +48,8 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+/server/.env
+/client/.env
 
 # temp directory
 .temp
@@ -52,7 +61,5 @@ pids
 *.seed
 *.pid.lock
 
-# Diagnostic reports (https://nodejs.org/api/report.html)
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-/generated/prisma
+# Prisma
+/server/generated/prisma
