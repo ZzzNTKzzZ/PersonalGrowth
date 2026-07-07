@@ -8,6 +8,8 @@ import { TaskModule } from './module/task/task.module.js';
 import { HabitModule } from './module/habit/habit.module.js';
 import { MoodModule } from './module/mood/mood.module.js';
 import { JournalModule } from './module/journal/journal.module.js';
+import { DayReviewModule } from './module/day-review/day-review.module.js';
+import { DashboardModule } from './module/dashboard/dashboard.module.js';
 
 @Module({
   imports: [
@@ -21,7 +23,9 @@ import { JournalModule } from './module/journal/journal.module.js';
     TaskModule,
     HabitModule,
     MoodModule,
-    JournalModule
+    JournalModule,
+    DayReviewModule,
+    DashboardModule
   ],
 })
 export class AppModule {}
