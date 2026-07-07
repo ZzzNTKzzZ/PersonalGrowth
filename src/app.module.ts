@@ -5,6 +5,9 @@ import { AuthModule } from './module/auth/auth.module.js';
 import { UserModule } from './module/users/user.module.js';
 import { CategoryModule } from './module/category/category.module.js';
 import { TaskModule } from './module/task/task.module.js';
+import { HabitModule } from './module/habit/habit.module.js';
+import { MoodModule } from './module/mood/mood.module.js';
+import { JournalModule } from './module/journal/journal.module.js';
 
 @Module({
   imports: [
@@ -15,7 +18,10 @@ import { TaskModule } from './module/task/task.module.js';
     AuthModule,
     UserModule,
     CategoryModule,
-    TaskModule
+    TaskModule,
+    HabitModule,
+    MoodModule,
+    JournalModule
   ],
 })
 export class AppModule {}
