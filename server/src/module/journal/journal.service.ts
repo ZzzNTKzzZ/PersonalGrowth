@@ -10,7 +10,7 @@ export class JournalService {
   private formatJournal(journal: any): JournalResponse {
     return {
       id: journal.id,
-      title: journal.title,
+      name: journal.name,
       content: journal.content,
       imageUrl: journal.imageUrl,
       createdAt: journal.createdAt,

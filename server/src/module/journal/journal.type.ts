@@ -5,7 +5,7 @@ export type CursorPaginationQuery = {
 
 export type JournalResponse = {
   id: string;
-  title: string | null;
+  name: string | null;
   content: string;
   imageUrl: string | null;
   createdAt: Date;

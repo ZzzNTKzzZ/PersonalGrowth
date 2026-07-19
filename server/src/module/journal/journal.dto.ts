@@ -4,7 +4,7 @@ export class CreateJournalDto {
   @IsString()
   @IsOptional()
   @MaxLength(200)
-  title?: string;
+  name?: string;
 
   @IsString()
   @MinLength(2)
@@ -19,7 +19,7 @@ export class UpdateJournalDto {
   @IsString()
   @IsOptional()
   @MaxLength(200)
-  title?: string;
+  name?: string;
 
   @IsString()
   @IsOptional()

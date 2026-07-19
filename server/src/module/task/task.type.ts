@@ -2,7 +2,7 @@ import { TaskStatus } from "../../../generated/prisma/enums.js";
 
 export interface TaskResponse {
   id: string;
-  title: string;
+  name: string;
   description?: string;
   status: TaskStatus;
   dueDate: Date;

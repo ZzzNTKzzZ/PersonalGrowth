@@ -69,7 +69,7 @@ model Category {
 
 model Task {
   id          String     @id @default(cuid())
-  title       String
+  name       String
   description String?
   dueDate     DateTime?
   status      TaskStatus @default(TODO)
@@ -112,7 +112,7 @@ model Mood {
 
 model Journal {
   id        String   @id @default(cuid())
-  title     String?
+  name     String?
   content   String
   imageUrl  String?
   createdAt DateTime @default(now())
