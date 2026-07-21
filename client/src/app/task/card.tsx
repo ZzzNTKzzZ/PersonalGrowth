@@ -43,7 +43,7 @@ export default function TaskCard({
         </View>
         <View className="flex-row items-center">
           <View className="w-12 h-12 rounded-2xl bg-primary/10 justify-center items-center mr-4">
-            {iconName && <Ionicons name={iconName} size={24} color="#1e293b" />}
+            {iconName && <Ionicons name={iconName} size={24} color="#22C55E" />}
           </View>
           <View className="justify-center">
             <Text

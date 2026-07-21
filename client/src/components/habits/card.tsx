@@ -25,7 +25,7 @@ export default function HabitCard({
     <Card className="flex-row justify-between items-center mb-3 rounded-2xl p-4 shadow-sm border-border bg-card">
       <View className="flex-row items-center">
         <View className="w-12 h-12 rounded-2xl bg-primary/10 justify-center items-center mr-4">
-          {iconName && <Ionicons name={iconName} size={24} color="#1e293b" />}
+          {iconName && <Ionicons name={iconName} size={24} color="#22C55E" />}
         </View>
         <View className="justify-center">
           <Text 

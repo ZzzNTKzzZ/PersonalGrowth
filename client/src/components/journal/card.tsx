@@ -45,7 +45,7 @@ export default function JournalCard({
           </View>
           
           <View className="w-12 h-12 rounded-2xl bg-primary/5 justify-center items-center">
-            {iconName && <Ionicons name={iconName} size={24} color="#1e293b" />}
+            {iconName && <Ionicons name={iconName} size={24} color="#22C55E" />}
           </View>
         </View>
         
