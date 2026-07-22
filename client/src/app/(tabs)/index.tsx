@@ -10,14 +10,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Checkbox } from "@/components/ui/checkbox";
-import HabitCard from "@/components/habits/card";
-import TaskCard from "../task/card";
-import MyCalendarScreen from "@/components/ui/calendar";
-import JournalCard from "@/components/journal/card";
 import { Badge } from "@/components/ui/badge";
 import { LineChart } from "react-native-gifted-charts";
 import { LinearGradient, Stop } from "react-native-svg";
 import DailySummaryCard from "@/components/dashboard/DailySummaryCard";
+import WeekSummaryCard from "@/components/dashboard/WeekSummaryCard";
 
 export default function HomeScreen() {
   const today = new Date().toLocaleDateString("vi-VN", {
@@ -47,6 +44,16 @@ export default function HomeScreen() {
     { name: "Điểm TB", total: 10, done: 8.2, icon: "star-outline", color: "#F59E0B" },
     { name: "Tập trung", time: '6h 30m', icon: "time-outline", color: "#8B5CF6" }
   ];
+
+  const wMood = [
+    { date: "16/7", value: 50},
+    { date: "17/7", value: 30},
+    { date: "18/7", value: 80},
+    { date: "19/7", value: 20},
+    { date: "20/7", value: 80},
+    { date: "21/7", value: 90},
+    { date: "22/7", value: 10},
+  ]
   type HabitState = { name: string; checked: boolean; streak: number }[];
   const [t, dispatch] = React.useReducer(
     (state: HabitState, action: { type: string; index: number }) => {
@@ -287,6 +294,7 @@ export default function HomeScreen() {
             ))}
           </View>
         </Card>
+        <WeekSummaryCard data={wMood}/>
       </ScrollView>
     </View>
   );

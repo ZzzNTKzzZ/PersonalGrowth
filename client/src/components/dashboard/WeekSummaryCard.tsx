@@ -48,14 +48,14 @@ export default function WeekSummaryCard({data}: Props) {
                 value: match ? match.value : 0,
                 labelComponent: () => (
                     // marginLeft: -25 để căn giữa chính xác đoạn text rộng 50px ngay dưới dấu dot
-                    <View style={{ width: 50, marginLeft: 25 }}>
+                    <View style={{ width: 50, marginLeft: -10 }}>
                         <Text style={{ 
                             color: isToday ? '#F59E0B' : '#9CA3AF', 
                             fontWeight: isToday ? 'bold' : 'normal',
                             fontSize: 10, 
                             textAlign: 'center'
                         }}>
-                            {isToday ? 'Hôm nay' : `${d.getDate()}/${d.getMonth() + 1}`}
+                            {d.getDate()}/${d.getMonth() + 1}
                         </Text>
                     </View>
                 )
@@ -65,11 +65,11 @@ export default function WeekSummaryCard({data}: Props) {
 
     const yAxisLabelWidth = 36;
     const cardPadding = 48; // px-6 tương đương 24px mỗi bên
-    const availableWidth = Dimensions.get("window").width - cardPadding - yAxisLabelWidth - (Platform.OS === 'web' ? 96 : 90);
+    const availableWidth = Dimensions.get("window").width - cardPadding - yAxisLabelWidth - (Platform.OS === 'web' ? 96 : 56);
     
     // Để nhãn X (rộng 50px) ở đầu và cuối không bị cắt mất, ta thêm initialSpacing và endSpacing
     const initialSpacing = 20; 
-    const endSpacing = 24;
+    const endSpacing = 20;
     
     // Khoảng cách giữa các điểm (6 khoảng cho 7 ngày)
     const spacing = (availableWidth - initialSpacing - endSpacing) / (chartData.length > 1 ? chartData.length - 1 : 1);
@@ -83,16 +83,13 @@ export default function WeekSummaryCard({data}: Props) {
     const startDateString = `${startDate.getDate()}/${startDate.getMonth() + 1}`;
 
     return (
-        <Card className="px-6 py-4 mb-6">
+        <Card className="px-6 py-4 mb-6 overflow-hidden">
             <View className="flex-row justify-between items-center">
               <Text variant={"lead"} className="font-bold">
                 Xu hướng cảm xúc (7 ngày)
               </Text>
-              <Text className="text-gray-400 text-sm font-medium">
-                Từ {startDateString}
-              </Text>
             </View>
-            <View className="w-full mt-4 items-center">
+            <View className="w-full items-center">
             <LineChart
               areaGradientId={"1243"}
               areaGradientComponent={() => (
@@ -125,7 +122,7 @@ export default function WeekSummaryCard({data}: Props) {
               rulesColor={"rgba(156, 163, 175, 0.2)"}
               width={availableWidth}
               spacing={spacing}
-              height={80}
+              height={60}
               pointerConfig={{
                 pointerStripHeight: 80,
                 pointerStripColor: 'rgba(245, 158, 11, 0.5)',
@@ -135,15 +132,7 @@ export default function WeekSummaryCard({data}: Props) {
                 pointerLabelWidth: 80,
                 pointerLabelHeight: 30,
                 autoAdjustPointerLabelPosition: true,
-                pointerLabelComponent: (items: any) => {
-                  return (
-                    <View className="bg-gray-800 px-2 py-1 rounded-md">
-                      <Text className="text-white text-xs font-bold text-center">
-                        {items[0].label}: {items[0].value}
-                      </Text>
-                    </View>
-                  );
-                },
+              
               }}
             />
           </View>

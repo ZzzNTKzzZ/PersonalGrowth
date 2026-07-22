@@ -22,6 +22,9 @@
     --border: #c5c6cd;
     --input: #e3e2e0;
     --ring: #1e293b;
+    
+    --accent: #e3e2e0;
+    --accent-foreground: #1a1c1a;
   }
 
   .dark {
@@ -43,5 +46,8 @@
     --border: #75777d;
     --input: #45474c;
     --ring: #bcc7de;
+    
+    --accent: #45474c;
+    --accent-foreground: #faf9f6;
   }
 }
