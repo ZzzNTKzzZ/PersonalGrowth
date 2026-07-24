@@ -278,7 +278,7 @@ export default function HomeScreen() {
                     className="p-1.5 rounded-[8px] border border-border items-center justify-center"
                     style={{ backgroundColor: `${i.color}33` }}
                   >
-                    <Ionicons name={i.icon as any} color={i.color} size={24} />
+                    <Ionicons name={i.icon as  keyof typeof Ionicons.glyphMap} color={i.color} size={24} />
                   </View>
                   <Text variant={"h4"} className="flex-1" numberOfLines={1}>{i.name}</Text>
                 </View>
