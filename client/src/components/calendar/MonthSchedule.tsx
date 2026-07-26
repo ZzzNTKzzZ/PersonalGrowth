@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View, TouchableOpacity, ScrollView } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { Calendar as RNCalendar } from "react-native-calendars";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "../ui/text";
@@ -133,7 +133,7 @@ export default function MonthScheduleTimeline({
     return { markedDates: marks, eventsByDate: byDate };
   }, [events, activeDate]);
 
-  // Danh sách sự kiện của ngày đang được chọn (Agenda List)
+  // Danh sách sự kiện của ngày đang được chọn (Agenda Timeline)
   const selectedDateKey = formatYYYYMMDD(activeDate);
   const selectedDayEvents = eventsByDate[selectedDateKey] || [];
 
@@ -195,12 +195,15 @@ export default function MonthScheduleTimeline({
         />
       </View>
 
-      {/* 2. Phần Agenda hiển thị danh sách sự kiện ở nửa dưới màn hình */}
-      <View className="w-full p-4 border-t border-border bg-card" style={{ minHeight: 280 }}>
+      {/* 2. Phần Agenda dạng Vertical Timeline ở nửa dưới màn hình */}
+      <View
+        className="w-full p-4 border-t border-border bg-card"
+        style={{ minHeight: 280 }}
+      >
         {/* Header Agenda */}
-        <View className="flex-row items-center justify-between mb-3 px-1">
+        <View className="flex-row items-center justify-between mb-3.5 px-1">
           <View className="flex-row items-center gap-2">
-            <Ionicons name="list-outline" size={18} color="#10B981" />
+            <Ionicons name="git-commit-outline" size={18} color="#10B981" />
             <Text className="font-bold text-sm text-foreground">
               {`Lịch trình ngày ${activeDate.getDate()}/${
                 activeDate.getMonth() + 1
@@ -227,40 +230,59 @@ export default function MonthScheduleTimeline({
           )}
         </View>
 
-        {/* Danh sách sự kiện ngày chọn */}
+        {/* Danh sách sự kiện ngày chọn dạng Vertical Timeline */}
         {selectedDayEvents.length > 0 ? (
-          <View className="w-full">
+          <View className="w-full relative pl-0 pr-1 pt-1 pb-2">
+            {/* Trục đường kẻ dọc Timeline */}
+            <View
+              className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-border/80"
+              style={{ borderRadius: 1 }}
+            />
+
             {selectedDayEvents.map((item, index) => {
               const categoryConfig =
                 CATEGORY_COLORS[item.description || ""] || DEFAULT_COLOR;
               const itemColor = item.color || categoryConfig.hex;
+
               const isAllDay =
                 (item.end.getTime() - item.start.getTime()) / (1000 * 60 * 60) >=
                 20;
 
               return (
-                <TouchableOpacity
+                <View
                   key={index}
-                  activeOpacity={0.8}
-                  onPress={() => onPressEvent?.(item)}
-                  className="mb-2 bg-background border border-border rounded-xl p-3 shadow-xs flex-row items-center justify-between"
-                  style={{ borderLeftWidth: 4, borderLeftColor: itemColor }}
+                  className="flex-row items-start mb-3.5 relative"
                 >
-                  <View className="flex-1 mr-2">
-                    <View className="flex-row items-center gap-2 mb-1">
-                      <Text className="font-semibold text-xs text-foreground">
-                        {item.title}
-                      </Text>
+                  {/* Nút mốc thời gian Node Dot trên trục Timeline */}
+                  <View className="w-8 items-center justify-center pt-3 z-10">
+                    <View
+                      style={{ borderColor: itemColor }}
+                      className="w-4 h-4 rounded-full bg-background border-2 items-center justify-center shadow-xs"
+                    >
+                      <View
+                        style={{ backgroundColor: itemColor }}
+                        className="w-1.5 h-1.5 rounded-full"
+                      />
                     </View>
+                  </View>
 
-                    <View className="flex-row items-center gap-3">
+                  {/* Thẻ Card sự kiện dạng Timeline */}
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => onPressEvent?.(item)}
+                    className="flex-1 border-b border-border p-3.5 shadow-xs"
+                  >
+                    <View className="flex-row items-center justify-between mb-1.5">
                       <View className="flex-row items-center gap-1">
                         <Ionicons
                           name="time-outline"
-                          size={12}
-                          color="#6B7280"
+                          size={13}
+                          color={itemColor}
                         />
-                        <Text variant="muted" className="text-[11px]">
+                        <Text
+                          style={{ color: itemColor }}
+                          className="text-xs font-bold"
+                        >
                           {isAllDay
                             ? "Cả ngày"
                             : `${formatTime(item.start)} - ${formatTime(
@@ -268,30 +290,33 @@ export default function MonthScheduleTimeline({
                               )}`}
                         </Text>
                       </View>
-                    </View>
-                  </View>
 
-                  {/* Badge danh mục */}
-                  {item.description && (
-                    <View className="items-end">
-                      <View
-                        className={`flex-row items-center gap-1 px-2 py-1 rounded-md ${categoryConfig.bg}`}
-                      >
-                        <Ionicons
-                          name={categoryConfig.icon}
-                          size={11}
-                          color={categoryConfig.hex}
-                        />
-                        <Text
-                          style={{ color: categoryConfig.hex }}
-                          className="text-[10px] font-bold"
+                      {item.description && (
+                        <View
+                          style={{ backgroundColor: `${itemColor}1F` }}
+                          className="flex-row items-center gap-1 px-2 py-0.5 rounded-lg"
                         >
-                          {item.description}
-                        </Text>
-                      </View>
+                          <Ionicons
+                            name={categoryConfig.icon}
+                            size={11}
+                            color={itemColor}
+                          />
+                          <Text
+                            style={{ color: itemColor }}
+                            className="text-[10px] font-bold"
+                          >
+                            {item.description}
+                          </Text>
+                        </View>
+                      )}
                     </View>
-                  )}
-                </TouchableOpacity>
+
+                    {/* Tiêu đề sự kiện */}
+                    <Text className="font-bold text-sm text-foreground">
+                      {item.title}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               );
             })}
           </View>
