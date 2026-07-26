@@ -3,19 +3,10 @@ import { View, TouchableOpacity, DimensionValue, ViewStyle } from "react-native"
 import { Calendar } from "react-native-big-calendar";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "../ui/text";
-
-export type CalendarEvent = {
-  title: string;
-  start: Date;
-  end: Date;
-  color?: string; // Ví dụ: "#3B82F6", "#10B981", "#8B5CF6"
-  icon?: keyof typeof Ionicons.glyphMap;
-  description?: string;
-};
+import { CalendarEvent } from "./DayScheduleTimeline";
 
 type Props = {
   events: CalendarEvent[];
-  mode?: "day" | "week" | "month";
   height?: number;
   date?: Date;
   hideHeader?: boolean;
@@ -31,10 +22,9 @@ const formatTime = (d: Date) => {
   return `${hours}:${minutes}`;
 };
 
-export default function DayScheduleTimeline({
+export default function WeekScheduleTimeLine({
   events,
-  mode = "day",
-  height = 600,
+  height = 650,
   date,
   hideHeader = true,
   swipeEnabled = true,
@@ -52,7 +42,7 @@ export default function DayScheduleTimeline({
     return () => clearInterval(interval);
   }, []);
 
-  // 1. Tính toán minHour và maxHour: Cắt bỏ hoàn toàn các giờ trước mốc (1 giờ trước công việc đầu tiên)
+  // Tính toán minHour và maxHour
   const { minHour, maxHour, scrollOffsetMinutes } = useMemo(() => {
     if (!events || events.length === 0) {
       return { minHour: 6, maxHour: 23, scrollOffsetMinutes: 6 * 60 };
@@ -67,14 +57,12 @@ export default function DayScheduleTimeline({
 
     const targetEvents = timedEvents.length > 0 ? timedEvents : events;
 
-    // Tìm công việc có thời gian bắt đầu sớm nhất
     const earliestEvent = targetEvents.reduce((earliest, current) => {
       return current.start.getTime() < earliest.start.getTime()
         ? current
         : earliest;
     }, targetEvents[0]);
 
-    // Tìm công việc có thời gian kết thúc muộn nhất
     const latestEvent = targetEvents.reduce((latest, current) => {
       return current.end.getTime() > latest.end.getTime()
         ? current
@@ -86,9 +74,8 @@ export default function DayScheduleTimeline({
       latestEvent.end.getHours() + latestEvent.end.getMinutes() / 60
     );
 
-    // Lấy mốc giờ bắt đầu sớm nhất (lùi 1 giờ trước sự kiện, VD: sự kiện 8h thì hiển thị từ 7h)
     const min = Math.max(0, startHour - 1);
-    const max = 23;
+    const max = Math.min(23, Math.max(min + 2, endHour + 1));
 
     return {
       minHour: min,
@@ -98,11 +85,11 @@ export default function DayScheduleTimeline({
   }, [events]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, width: "100%" }}>
       <Calendar
         events={events}
         height={height}
-        mode={mode}
+        mode="week"
         date={date}
         minHour={minHour}
         maxHour={maxHour}
@@ -152,12 +139,17 @@ export default function DayScheduleTimeline({
         showTime={true}
         theme={{
           palette: {
-            nowIndicator: "#EF4444", // Đường vạch đỏ dính liền theo dòng thời gian khi cuộn
+            nowIndicator: "#EF4444",
           },
         }}
+        renderHeader={hideHeader ? () => null : undefined}
+        headerContainerStyle={
+          hideHeader ? { display: "none", height: 0 } : undefined
+        }
+        calendarContainerStyle={{ paddingHorizontal: 0, marginHorizontal: 0 }}
+        bodyContainerStyle={{ paddingHorizontal: 0, marginHorizontal: 0, marginRight: 0 }}
         hourComponent={({ hour }) => {
           const isCurrentHour = now.getHours() === hour;
-          const currentMinutes = now.getMinutes();
 
           const totalHours = maxHour - minHour;
           const cellHeight = totalHours > 0 ? height / totalHours : 60;
@@ -178,11 +170,10 @@ export default function DayScheduleTimeline({
                 borderRightColor: "#F3F4F6",
               }}
             >
-              <Text variant="muted" className="text-[10px] font-medium ">
+              <Text variant="muted" className="text-[10px] font-medium">
                 {`${hour.toString().padStart(2, "0")}:00`}
               </Text>
 
-              {/* Nhãn thời gian hiện tại nằm ngay cạnh vạch đỏ chỉ giờ */}
               {isCurrentHour && (
                 <View
                   style={{
@@ -205,19 +196,12 @@ export default function DayScheduleTimeline({
             </View>
           );
         }}
-        dayHeaderHighlightColor="transparent"
-        weekDayHeaderHighlightColor="transparent"
-        renderHeader={hideHeader ? () => null : undefined}
-        headerContainerStyle={
-          hideHeader ? { display: "none", height: 0 } : undefined
-        }
-        calendarContainerStyle={{ paddingHorizontal: 0, marginHorizontal: 0 }}
-        bodyContainerStyle={{ paddingHorizontal: 0, marginHorizontal: 0, marginRight: 5 }}
         calendarCellStyle={() => ({
           borderTopWidth: 1,
           borderTopColor: "#E5E7EB",
           borderStyle: "dashed",
-          borderLeftWidth: 0,
+          borderLeftWidth: 1,
+          borderLeftColor: "#F3F4F6",
           borderRightWidth: 0,
           borderBottomWidth: 0,
         })}
@@ -229,33 +213,26 @@ export default function DayScheduleTimeline({
           const { key, style: originalStyle, ...otherProps } = touchableOpacityProps || {};
           const mainColor = event.color || "#3B82F6";
 
-          // Màu nền 20% opacity (nếu là hex #RRGGBB thì ghép thêm '33' ở cuối)
           const bgColor =
             mainColor.startsWith("#") && mainColor.length === 7
               ? `${mainColor}33`
               : "rgba(59, 130, 246, 0.15)";
 
-          const count = event.overlapCount || 1;
-          const pos = event.overlapPosition || 0;
-          const gap = 12; // 4px mỗi bên -> tạo khoảng cách 8px rộng rãi giữa các sự kiện trùng mốc giờ
-
-          const overlapStyle: ViewStyle = {
-            width: (count > 1 ? `${100 / count - 2}%` : "100%") as DimensionValue,
-            left: (count > 1 ? `${(pos / count) * 100}%` : "0%") as DimensionValue,
-            paddingLeft: 0,
-            paddingRight: count > 1 && pos < count - 1 ? gap : 0,
-            start: undefined,
-            end: undefined,
-          };
-
-          // Tính toán thời lượng sự kiện (phút) để tự động điều chỉnh hiển thị gọn gàng
           const durationMinutes =
             (event.end.getTime() - event.start.getTime()) / (1000 * 60);
           const isShortEvent = durationMinutes <= 35;
 
-          // Trường hợp đặc biệt: Sự kiện ngắn (<= 30 phút) VÀ bị chia cột hẹp (count > 1)
-          // Khung quá nhỏ về cả chiều cao lẫn chiều rộng -> Chỉ hiện icon hoặc 1 dòng chữ nhỏ căn giữa
-          const isTooSmallForText = isShortEvent && count > 1;
+          const count = event.overlapCount || 1;
+          const pos = event.overlapPosition || 0;
+          const gap = 2; // Khoảng cách nhỏ giữa các sự kiện trùng mốc giờ trong cùng 1 cột ngày
+
+          const overlapStyle: ViewStyle = {
+            width: (count > 1 ? `${100 / count - 1}%` : "100%") as DimensionValue,
+            left: (count > 1 ? `${(pos / count) * 100}%` : "0%") as DimensionValue,
+            paddingRight: count > 1 && pos < count - 1 ? gap : 0,
+            start: undefined,
+            end: undefined,
+          };
 
           return (
             <TouchableOpacity
@@ -273,14 +250,14 @@ export default function DayScheduleTimeline({
                   elevation: 0,
                 },
               ]}
-              className={`border-l-4 rounded-lg px-1.5 overflow-hidden ${
+              className={`border-l-4 rounded-lg px-1 overflow-hidden ${
                 isShortEvent ? "py-0.5 justify-center" : "py-1"
               }`}
             >
               <View className="flex-1 justify-center">
                 <Text
                   numberOfLines={isShortEvent ? 1 : undefined}
-                  className="font-semibold text-xs text-foreground"
+                  className="font-semibold text-[11px] text-foreground"
                 >
                   {event.title}
                 </Text>

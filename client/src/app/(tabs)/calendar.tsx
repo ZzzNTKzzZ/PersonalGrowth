@@ -6,6 +6,8 @@ import { useState } from "react";
 import { ScrollView, View, TouchableOpacity } from "react-native";
 import DayScheduleTimeline from "@/components/calendar/DayScheduleTimeline";
 import WeekDateSelector from "@/components/calendar/WeekDateSelector";
+import WeekScheduleTimeLine from "@/components/calendar/WeekSchedule";
+import MonthScheduleTimeline from "@/components/calendar/MonthSchedule";
 
 export default function Calendar(params: any) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -63,166 +65,186 @@ export default function Calendar(params: any) {
     },
   ];
 
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const diffToMon = today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+  const monday = new Date(today.getFullYear(), today.getMonth(), diffToMon);
+
+  const getDayDate = (offsetDays: number) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + offsetDays);
+    return d;
+  };
+
   const aDay: {
     name: string;
     category: string;
     icon: keyof typeof Ionicons.glyphMap;
+    color?: string;
+    startDate?: Date;
+    endDate?: Date;
   }[] = [
     {
-      name: "Sinh nhật",
-      category: "Cá nhân",
-      icon: "alert-outline",
+      name: "Khóa đào tạo Leadership (3 ngày)",
+      category: "Công việc",
+      icon: "briefcase-outline",
+      color: "#8B5CF6",
+      startDate: getDayDate(0), // Thứ 2
+      endDate: getDayDate(2), // Thứ 4
     },
     {
-      name: "Du lịch Đà Lạt",
+      name: "Du lịch Đà Lạt (3 ngày)",
       category: "Du lịch",
       icon: "airplane-outline",
+      color: "#F43F5E",
+      startDate: getDayDate(3), // Thứ 5
+      endDate: getDayDate(5), // Thứ 7
+    },
+    {
+      name: "Sinh nhật đồng nghiệp",
+      category: "Cá nhân",
+      icon: "alert-outline",
+      color: "#3B82F6",
+      startDate: getDayDate(2), // Thứ 4
+      endDate: getDayDate(2),
+    },
+    {
+      name: "Hội thảo AI Tech All-Day",
+      category: "Hội thảo",
+      icon: "bulb-outline",
+      color: "#10B981",
+      startDate: getDayDate(4), // Thứ 6
+      endDate: getDayDate(4),
     },
   ];
 
-  const today = new Date();
-
   const singleDayEvents = [
+    // Thứ 2 (Monday)
     {
       title: "Họp khởi động tuần mới",
-      start: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        8,
-      ), // 08:30
-      end: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        9,
-        30,
-      ), // 09:30
-      color: "#3B82F6", // Màu xanh dương (Tùy chọn)
+      start: new Date(new Date(getDayDate(0)).setHours(8, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(0)).setHours(9, 30, 0, 0)),
+      color: "#3B82F6",
     },
     {
-      title: "Họp khởi động tuần mới",
-      start: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        8,
-        30
-      ), // 08:30
-      end: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        9,
-      ), // 09:30
-      color: "#3B82F6", // Màu xanh dương (Tùy chọn)
-    },
-        {
-      title: "Họp khởi động tuần mới",
-      start: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        8,
-      ), // 08:30
-      end: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        9,
-        30,
-      ), // 09:30
-      color: "#3B82F6", // Màu xanh dương (Tùy chọn)
+      title: "Phỏng vấn Senior Dev",
+      start: new Date(new Date(getDayDate(0)).setHours(8, 30, 0, 0)),
+      end: new Date(new Date(getDayDate(0)).setHours(9, 0, 0, 0)),
+      color: "#06B6D4",
     },
     {
-      title: "Review Code với Team Frontend",
-      start: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        10,
-        0,
-      ), // 10:00
-      end: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        11,
-        30,
-      ), // 11:30
-      color: "#10B981", // Màu xanh lá (Tùy chọn)
-    },
-    {
-      title: "Ăn trưa cùng Khách hàng",
-      start: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        12,
-        0,
-      ), // 12:00
-      end: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        13,
-        30,
-      ), // 13:30
-      color: "#F59E0B", // Màu cam (Tùy chọn)
+      title: "Review Code với Frontend",
+      start: new Date(new Date(getDayDate(0)).setHours(10, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(0)).setHours(11, 30, 0, 0)),
+      color: "#10B981",
     },
     {
       title: "Báo cáo tiến độ cho Manager",
-      start: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        14,
-        30,
-      ), // 14:30
-      end: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        15,
-        30,
-      ), // 15:30
-      color: "#8B5CF6", // Màu tím (Tùy chọn)
+      start: new Date(new Date(getDayDate(0)).setHours(14, 30, 0, 0)),
+      end: new Date(new Date(getDayDate(0)).setHours(16, 0, 0, 0)),
+      color: "#8B5CF6",
+    },
+
+    // Thứ 3 (Tuesday)
+    {
+      title: "Workshop UI/UX Design System",
+      start: new Date(new Date(getDayDate(1)).setHours(9, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(1)).setHours(10, 30, 0, 0)),
+      color: "#F59E0B",
     },
     {
-      title: "Báo cáo tiến độ cho Manager",
-      start: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        14,
-        30,
-      ), // 14:30
-      end: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        16,
-        30,
-      ), // 15:30
-      color: "#8B5CF6", // Màu tím (Tùy chọn)
+      title: "Họp với Đối tác Khách hàng",
+      start: new Date(new Date(getDayDate(1)).setHours(10, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(1)).setHours(11, 30, 0, 0)),
+      color: "#EC4899",
     },
     {
-      title: "Tập Gym / Thể thao",
-      start: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        17,
-        30,
-      ), // 17:30
-      end: new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        19,
-        0,
-      ), // 19:00
-      color: "#F43F5E", // Màu đỏ hồng (Tùy chọn)
+      title: "Lập kế hoạch Release v2.0",
+      start: new Date(new Date(getDayDate(1)).setHours(15, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(1)).setHours(16, 30, 0, 0)),
+      color: "#3B82F6",
+    },
+
+    // Thứ 4 (Wednesday)
+    {
+      title: "Đào tạo Security & Auth Flow",
+      start: new Date(new Date(getDayDate(2)).setHours(8, 30, 0, 0)),
+      end: new Date(new Date(getDayDate(2)).setHours(10, 0, 0, 0)),
+      color: "#EF4444",
+    },
+    {
+      title: "Testing & QA Benchmark",
+      start: new Date(new Date(getDayDate(2)).setHours(10, 30, 0, 0)),
+      end: new Date(new Date(getDayDate(2)).setHours(12, 0, 0, 0)),
+      color: "#6366F1",
+    },
+    {
+      title: "Sync 1-on-1 với Manager",
+      start: new Date(new Date(getDayDate(2)).setHours(14, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(2)).setHours(15, 0, 0, 0)),
+      color: "#06B6D4",
+    },
+
+    // Thứ 5 (Thursday)
+    {
+      title: "Demo Sản phẩm cho Ban giám đốc",
+      start: new Date(new Date(getDayDate(3)).setHours(9, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(3)).setHours(10, 0, 0, 0)),
+      color: "#8B5CF6",
+    },
+    {
+      title: "Refactor Core Module",
+      start: new Date(new Date(getDayDate(3)).setHours(10, 30, 0, 0)),
+      end: new Date(new Date(getDayDate(3)).setHours(12, 0, 0, 0)),
+      color: "#10B981",
+    },
+    {
+      title: "Họp Retro Sprint",
+      start: new Date(new Date(getDayDate(3)).setHours(14, 30, 0, 0)),
+      end: new Date(new Date(getDayDate(3)).setHours(16, 0, 0, 0)),
+      color: "#F59E0B",
+    },
+
+    // Thứ 6 (Friday)
+    {
+      title: "Townhall Toàn Công Ty Q3",
+      start: new Date(new Date(getDayDate(4)).setHours(8, 30, 0, 0)),
+      end: new Date(new Date(getDayDate(4)).setHours(10, 0, 0, 0)),
+      color: "#3B82F6",
+    },
+    {
+      title: "Tổng kết mục tiêu OKR",
+      start: new Date(new Date(getDayDate(4)).setHours(10, 30, 0, 0)),
+      end: new Date(new Date(getDayDate(4)).setHours(11, 30, 0, 0)),
+      color: "#EC4899",
+    },
+    {
+      title: "Happy Hour & Teambuilding",
+      start: new Date(new Date(getDayDate(4)).setHours(15, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(4)).setHours(17, 0, 0, 0)),
+      color: "#F59E0B",
+    },
+
+    // Thứ 7 (Saturday)
+    {
+      title: "Lớp học Tiếng Anh Chuyên ngành",
+      start: new Date(new Date(getDayDate(5)).setHours(9, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(5)).setHours(11, 0, 0, 0)),
+      color: "#10B981",
+    },
+    {
+      title: "Tập Gym & Chạy bộ thể thao",
+      start: new Date(new Date(getDayDate(5)).setHours(14, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(5)).setHours(16, 0, 0, 0)),
+      color: "#06B6D4",
+    },
+
+    // Chủ nhật (Sunday)
+    {
+      title: "Gặp mặt CLB Sách & Cà phê",
+      start: new Date(new Date(getDayDate(6)).setHours(10, 0, 0, 0)),
+      end: new Date(new Date(getDayDate(6)).setHours(12, 0, 0, 0)),
+      color: "#8B5CF6",
     },
   ];
 
@@ -276,24 +298,70 @@ export default function Calendar(params: any) {
           </View>
         </View>
 
-        <Card className="py-3">
-          <WeekDateSelector
-            data={c}
-            type={typeCalendar.value}
-            allDay={aDay}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-          />
-        </Card>
-        <Card className="my-3">
-          <DayScheduleTimeline
-            events={singleDayEvents}
-            mode={typeCalendar.value}
-            date={selectedDate}
-            onChangeDate={setSelectedDate}
-            swipeEnabled={true}
-          />
-        </Card>
+        {typeCalendar.value === "day" && (
+          <Card className="my-3 p-0 overflow-hidden">
+            <View className="py-2">
+              <WeekDateSelector
+                data={c}
+                type={typeCalendar.value}
+                allDay={aDay}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+              />
+            </View>
+            <DayScheduleTimeline
+              events={singleDayEvents}
+              mode="day"
+              date={selectedDate}
+              onChangeDate={setSelectedDate}
+              swipeEnabled={true}
+            />
+          </Card>
+        )}
+
+        {typeCalendar.value === "week" && (
+          <Card className="my-3 p-0 overflow-hidden">
+            <View className="py-2">
+              <WeekDateSelector
+                data={c}
+                type={typeCalendar.value}
+                allDay={aDay}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+              />
+            </View>
+            <WeekScheduleTimeLine
+              events={singleDayEvents}
+              date={selectedDate}
+              onChangeDate={setSelectedDate}
+              swipeEnabled={true}
+              hideHeader={true}
+            />
+          </Card>
+        )}
+
+        {typeCalendar.value === "month" && (
+          <Card className="my-3 p-0 overflow-hidden">
+            <MonthScheduleTimeline
+              events={[
+                ...singleDayEvents,
+                ...aDay.map((item) => ({
+                  title: item.name,
+                  start: item.startDate || today,
+                  end: item.endDate || today,
+                  color: item.color || "#8B5CF6",
+                  description: item.category,
+                })),
+              ]}
+              date={selectedDate}
+              onChangeDate={setSelectedDate}
+              swipeEnabled={true}
+              onSwitchToDayView={() => {
+                setTypeCalendar({ name: "Ngày", value: "day" });
+              }}
+            />
+          </Card>
+        )}
       </ScrollView>
       {/* Floating Action Button (FAB) thêm sự kiện / công việc mới */}
       <TouchableOpacity
