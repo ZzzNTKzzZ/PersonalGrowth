@@ -2,12 +2,13 @@ import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollView, View, TouchableOpacity } from "react-native";
 import DayScheduleTimeline from "@/components/calendar/DayScheduleTimeline";
 import WeekDateSelector from "@/components/calendar/WeekDateSelector";
 import WeekScheduleTimeLine from "@/components/calendar/WeekSchedule";
 import MonthScheduleTimeline from "@/components/calendar/MonthSchedule";
+import { taskApi, Task as ApiTask } from "@/services/task.service";
 
 export default function Calendar(params: any) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -18,6 +19,24 @@ export default function Calendar(params: any) {
     name: "Ngày",
     value: "day",
   });
+  const [apiTasks, setApiTasks] = useState<ApiTask[]>([]);
+
+  // Tải danh sách công việc/lịch trình từ NestJS Backend
+  useEffect(() => {
+    fetchTasksFromApi();
+  }, []);
+
+  const fetchTasksFromApi = async () => {
+    try {
+      const res = await taskApi.getTasks();
+      const tasks = (Array.isArray(res) ? res : (res as any)?.data || []) as ApiTask[];
+      if (tasks && tasks.length > 0) {
+        setApiTasks(tasks);
+      }
+    } catch (err) {
+      console.log("Dùng lịch trình mẫu local (Backend chưa bật hoặc chưa Auth)");
+    }
+  };
 
   const c: {
     date: string;

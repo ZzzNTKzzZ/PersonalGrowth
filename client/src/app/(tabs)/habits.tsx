@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -12,6 +12,7 @@ import Svg, { Circle } from "react-native-svg";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Calendar } from "@/components/ui/calendar";
+import { habitApi, Habit } from "@/services/habit.service";
 
 interface HabitItem {
   id: string;
@@ -24,41 +25,46 @@ interface HabitItem {
   streakDays: number;
   progress: number;
   checked: boolean;
+  recordId?: string;
 }
 
 // Component Vòng tròn tiến độ 80% Hoàn thành hôm nay
 function CircularProgress({
   percentage = 80,
-  size = 92,
-  strokeWidth = 8,
+  size = 72,
+  strokeWidth = 7,
   color = "#22C55E",
+}: {
+  percentage?: number;
+  size?: number;
+  strokeWidth?: number;
+  color?: string;
 }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (circumference * percentage) / 100;
 
   return (
-    <View
-      className="items-center justify-center relative"
-      style={{ width: size, height: size }}
-    >
+    <View className="items-center justify-center relative">
       <Svg width={size} height={size}>
+        {/* Vòng nền màu xám mờ */}
         <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
           stroke="#E5E7EB"
-          strokeWidth={strokeWidth}
           fill="none"
-        />
-        <Circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
           strokeWidth={strokeWidth}
+        />
+        {/* Vòng tiến độ màu xanh lá */}
+        <Circle
+          stroke={color}
           fill="none"
-          strokeDasharray={circumference}
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
@@ -69,7 +75,7 @@ function CircularProgress({
           {percentage}%
         </Text>
         <Text className="text-[9px] text-muted-foreground text-center font-medium leading-tight">
-          Hoàn thành{"\n"}hôm nay
+          Hôm nay
         </Text>
       </View>
     </View>
@@ -84,6 +90,7 @@ export default function HabitsScreen() {
 
   // Ngày đang được chọn trên lịch
   const [selectedDate, setSelectedDate] = useState("2026-07-23");
+  const [isLoadingApi, setIsLoadingApi] = useState(false);
 
   // Mảng danh sách thói quen
   const [habits, setHabits] = useState<HabitItem[]>([
@@ -143,37 +150,86 @@ export default function HabitsScreen() {
       icon: "moon-outline",
       color: "#F59E0B",
       bgColor: "bg-amber-500/15",
-      streakDays: 3,
-      progress: 30,
+      streakDays: 4,
+      progress: 0,
       checked: false,
     },
   ]);
 
-  // Modal thêm thói quen
+  // Modal Thêm Habit Mới
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitRule, setNewHabitRule] = useState("");
   const [newHabitDetail, setNewHabitDetail] = useState("");
 
-  // Toggle hoàn thành thói quen
-  const toggleHabit = (id: string) => {
+  // Gọi API lấy danh sách Habit từ NestJS Backend
+  useEffect(() => {
+    fetchHabitsFromApi();
+  }, []);
+
+  const fetchHabitsFromApi = async () => {
+    try {
+      setIsLoadingApi(true);
+      const res = await habitApi.getHabits();
+      const apiHabits = (Array.isArray(res) ? res : (res as any)?.data || []) as Habit[];
+      
+      if (apiHabits && apiHabits.length > 0) {
+        const mapped: HabitItem[] = apiHabits.map((h, idx) => {
+          const hasRecordToday = Boolean(h.records && h.records.length > 0);
+          return {
+            id: h.id,
+            name: h.name,
+            rule: h.frequency === "DAILY" ? "Hàng ngày" : "Hàng tuần",
+            detail: "08:00",
+            icon: (["fitness-outline", "book-outline", "leaf-outline", "water-outline", "moon-outline"][idx % 5]) as any,
+            color: ["#22C55E", "#8B5CF6", "#14B8A6", "#3B82F6", "#F59E0B"][idx % 5],
+            bgColor: ["bg-emerald-500/15", "bg-purple-500/15", "bg-teal-500/15", "bg-blue-500/15", "bg-amber-500/15"][idx % 5],
+            streakDays: h.streak?.current || 1,
+            progress: hasRecordToday ? 100 : 0,
+            checked: hasRecordToday,
+            recordId: hasRecordToday ? h.records![0].id : undefined,
+          };
+        });
+        setHabits(mapped);
+      }
+    } catch (error) {
+      console.log("Dùng danh sách habit mẫu local (Backend chưa bật hoặc chưa Auth)");
+    } finally {
+      setIsLoadingApi(false);
+    }
+  };
+
+  // Xử lý Tích chọn / Hủy tích chọn hoàn thành (Checkbox toggle)
+  const toggleCheck = async (id: string) => {
+    const target = habits.find((h) => h.id === id);
+    if (!target) return;
+
+    const nextChecked = !target.checked;
+
+    // Cập nhật UI ngay lập tức
     setHabits((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const nextChecked = !item.checked;
           return {
             ...item,
             checked: nextChecked,
-            progress: nextChecked
-              ? item.progress === 0
-                ? 100
-                : item.progress
-              : 0,
+            progress: nextChecked ? 100 : 0,
           };
         }
         return item;
       })
     );
+
+    // Gọi API NestJS Backend
+    try {
+      if (nextChecked) {
+        await habitApi.checkHabit(id);
+      } else if (target.recordId) {
+        await habitApi.uncheckHabit(id, target.recordId);
+      }
+    } catch (err) {
+      console.log("Tích chọn Habit trên local UI");
+    }
   };
 
   // Tính toán thống kê
@@ -183,21 +239,32 @@ export default function HabitsScreen() {
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   // Xử lý thêm habit mới
-  const handleAddHabit = () => {
+  const handleAddHabit = async () => {
     if (!newHabitName.trim()) return;
-    const newItem: HabitItem = {
-      id: Date.now().toString(),
-      name: newHabitName.trim(),
-      rule: newHabitRule.trim() || "Thói quen hàng ngày",
-      detail: newHabitDetail.trim() || "08:00",
-      icon: "sparkles-outline",
-      color: "#22C55E",
-      bgColor: "bg-emerald-500/15",
-      streakDays: 1,
-      progress: 0,
-      checked: false,
-    };
-    setHabits((prev) => [...prev, newItem]);
+    
+    // Gọi API Backend nếu có kết nối
+    try {
+      await habitApi.createHabit({
+        name: newHabitName.trim(),
+        frequency: "DAILY",
+      });
+      fetchHabitsFromApi();
+    } catch (err) {
+      const newItem: HabitItem = {
+        id: Date.now().toString(),
+        name: newHabitName.trim(),
+        rule: newHabitRule.trim() || "Thói quen hàng ngày",
+        detail: newHabitDetail.trim() || "08:00",
+        icon: "sparkles-outline",
+        color: "#22C55E",
+        bgColor: "bg-emerald-500/15",
+        streakDays: 1,
+        progress: 0,
+        checked: false,
+      };
+      setHabits((prev) => [...prev, newItem]);
+    }
+
     setNewHabitName("");
     setNewHabitRule("");
     setNewHabitDetail("");
@@ -403,7 +470,7 @@ export default function HabitsScreen() {
                 {/* Right Checkbox Circle */}
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => toggleHabit(item.id)}
+                  onPress={() => toggleCheck(item.id)}
                   className="ml-1"
                 >
                   {item.checked ? (
