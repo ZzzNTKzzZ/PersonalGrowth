@@ -86,8 +86,7 @@ export default function HomeScreen() {
         <View className="flex-row justify-between items-center pb-6">
           <View className="flex-col flex-1 pr-4">
             <View className="flex-row items-center flex-wrap">
-              <Text variant="h4">Chào buổi sáng, </Text>
-              <Text variant="h3">Khánh</Text>
+              <Text variant="h3">Chào buổi sáng, Khánh 👋</Text>
             </View>
           </View>
 
@@ -138,12 +137,12 @@ export default function HomeScreen() {
           />
         </View>
         <Card className="px-6 py-4 mb-6">
-          <View className="flex-row justify-between items-end">
-            <Text variant={"lead"} className="font-bold">
+          <View className="flex-row justify-between items-end mb-3">
+            <Text variant="h4" className="font-bold">
               Lịch trình hôm nay
             </Text>
             <View className="flex-row gap-1 items-center">
-              <Text variant={"lead"} className="text-secondary text-sm">
+              <Text className="text-secondary text-sm font-semibold">
                 Xem tất cả
               </Text>
               <Ionicons
@@ -155,32 +154,33 @@ export default function HomeScreen() {
             </View>
           </View>
           {c.map((i, index) => (
-            <View key={index} className="flex-row items-center">
-              <Text className="font-bold w-12">{i.time}</Text>
+            <View key={index} className="flex-row items-center py-2">
+              <Text className="font-bold w-12 text-sm">{i.time}</Text>
               <View className="relative items-center justify-center w-6">
                 <View className="w-2 h-2 bg-primary rounded-full z-10" />
                 {index !== c.length - 1 && (
                   <View className="absolute top-2 w-[2px] h-[48px] bg-border/50" />
                 )}
               </View>
-              <Text variant={"p"} className="m-0 flex-1 px-3" numberOfLines={1}>
+              <Text className="flex-1 px-3 text-sm font-medium text-foreground" numberOfLines={1}>
                 {i.name}
               </Text>
               <View className="w-24 items-end">
                 <Badge variant={"outline"}>
-                  <Text>{i.category}</Text>
+                  <Text className="text-xs">{i.category}</Text>
                 </Badge>
               </View>
             </View>
           ))}
         </Card>
+
         <Card className="px-6 py-4 mb-6">
-          <View className="flex-row justify-between items-end ">
-            <Text variant={"lead"} className="font-bold">
+          <View className="flex-row justify-between items-end mb-3">
+            <Text variant="h4" className="font-bold">
               Thói quen hôm nay
             </Text>
             <View className="flex-row gap-1 items-center">
-              <Text variant={"lead"} className="text-secondary text-sm">
+              <Text className="text-secondary text-sm font-semibold">
                 Xem tất cả
               </Text>
               <Ionicons
@@ -199,9 +199,8 @@ export default function HomeScreen() {
                 className="w-6 h-6"
               />
               <Text
-                variant={"p"}
                 onPress={() => dispatch({ type: "TOGGLE", index })}
-                className={`font-bold flex-1 mt-0 ${i.checked ? "line-through opacity-50" : ""}`}
+                className={`font-bold flex-1 text-sm ${i.checked ? "line-through opacity-50" : ""}`}
               >
                 {i.name}
               </Text>
@@ -223,17 +222,18 @@ export default function HomeScreen() {
             </View>
           ))}
         </Card>
+
         <Card className="px-6 py-4 mb-6 overflow-hidden">
-          <Text variant={"lead"} className="font-bold">
+          <Text variant="h4" className="font-bold">
             Chuỗi ngày
           </Text>
-          <View className="flex-row items-center mt-1">
+          <View className="flex-row items-center mt-2">
             <Ionicons name="flame" color={"red"} size={32} />
-            <View className="flex-row items-center gap-1 ml-1">
-              <Text variant={"h3"} className="my-0">
+            <View className="flex-row items-center gap-1.5 ml-1">
+              <Text variant="h2">
                 12
               </Text>
-              <Text variant={"p"} className="my-0 text-muted-foreground">
+              <Text variant="muted">
                 ngày liên tiếp
               </Text>
             </View>
@@ -267,7 +267,7 @@ export default function HomeScreen() {
           </View>
         </Card>
         <Card className="px-6 py-4 mb-6">
-          <Text variant={"lead"} className="font-bold">
+          <Text variant="h4" className="font-bold mb-3">
             Tổng kết hôm nay
           </Text>
           <View className="flex-row flex-wrap justify-between">

@@ -25,7 +25,7 @@ export default function JournalCard({
           <View className="flex-1 mr-3">
             <View className="flex-row items-center mb-2">
               <Badge variant="outline" className="bg-background">
-                <Text className="text-[10px] uppercase font-bold text-muted-foreground">
+                <Text variant="label" className="text-[10px]">
                   {date.toLocaleString("vi-VN", {
                     weekday: "long",
                     day: "2-digit",
@@ -35,11 +35,11 @@ export default function JournalCard({
               </Badge>
               {mood && (
                 <Badge variant="secondary" className="ml-2 bg-secondary/10">
-                  <Text className="text-secondary text-xs">{mood}</Text>
+                  <Text variant="caption" className="text-secondary font-bold">{mood}</Text>
                 </Badge>
               )}
             </View>
-            <Text variant="h3" className="text-primary mb-1 leading-tight">
+            <Text variant="h3" className="text-primary leading-tight">
               {name}
             </Text>
           </View>
@@ -51,7 +51,7 @@ export default function JournalCard({
         
         {/* Content */}
         {content && (
-          <Text className="text-foreground/80 leading-relaxed text-[15px] line-clamp-2">
+          <Text variant="p" className="text-foreground/80 leading-relaxed text-[15px] line-clamp-2">
             {content}
           </Text>
         )}

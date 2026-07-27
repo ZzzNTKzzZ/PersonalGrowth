@@ -254,8 +254,7 @@ export default function Calendar(params: any) {
         <View className="flex-row justify-between items-center pb-6">
           <View className="flex-col flex-1 pr-4">
             <View className="flex-row items-center flex-wrap">
-              <Text variant="h4">Chào buổi sáng, </Text>
-              <Text variant="h3">Khánh</Text>
+              <Text variant="h3">Chào buổi sáng, Khánh 👋</Text>
             </View>
           </View>
 
@@ -269,7 +268,7 @@ export default function Calendar(params: any) {
 
         <View className="flex-row justify-between items-center mb-4">
           <View className="flex-1">
-            <Text variant="h2" className="pb-0">
+            <Text variant="h1">
               Lịch trình
             </Text>
           </View>

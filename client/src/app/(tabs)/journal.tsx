@@ -7,7 +7,7 @@ export default function JournalScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerClassName="p-6 pb-20" showsVerticalScrollIndicator={false}>
-        <Text variant="h1" className="text-primary mb-6 mt-3 text-left">
+        <Text variant="h1" className="text-primary mb-6">
           Nhật ký
         </Text>
 

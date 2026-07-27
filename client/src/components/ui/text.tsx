@@ -6,7 +6,7 @@ import { Platform, Text as RNText, type Role } from 'react-native';
 
 const textVariants = cva(
   cn(
-    'text-foreground text-base',
+    'text-foreground font-normal text-base',
     Platform.select({
       web: 'select-text',
     })
@@ -14,26 +14,34 @@ const textVariants = cva(
   {
     variants: {
       variant: {
-        default: '',
+        default: 'text-base text-foreground font-normal',
         h1: cn(
-          'text-center text-4xl font-extrabold tracking-tight',
-          Platform.select({ web: 'scroll-m-20 text-balance' })
+          'text-3xl font-extrabold tracking-tight text-foreground',
+          Platform.select({ web: 'scroll-m-20' })
         ),
         h2: cn(
-          'pb-2 text-3xl font-semibold tracking-tight',
-          Platform.select({ web: 'scroll-m-20 first:mt-0' })
+          'text-2xl font-bold tracking-tight text-foreground',
+          Platform.select({ web: 'scroll-m-20' })
         ),
-        h3: cn('text-2xl font-semibold tracking-tight', Platform.select({ web: 'scroll-m-20' })),
-        h4: cn('text-xl font-semibold tracking-tight', Platform.select({ web: 'scroll-m-20' })),
-        p: 'mt-3 leading-7 sm:mt-6',
-        blockquote: 'mt-4 border-l-2 pl-3 italic sm:mt-6 sm:pl-6',
-        code: cn(
-          'bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold'
+        h3: cn(
+          'text-xl font-bold tracking-tight text-foreground',
+          Platform.select({ web: 'scroll-m-20' })
         ),
-        lead: 'text-muted-foreground text-xl',
-        large: 'text-lg font-semibold',
-        small: 'text-sm font-medium leading-none',
-        muted: 'text-muted-foreground text-sm',
+        h4: cn(
+          'text-lg font-semibold tracking-tight text-foreground',
+          Platform.select({ web: 'scroll-m-20' })
+        ),
+        p: 'text-base text-foreground font-normal leading-normal',
+        lead: 'text-lg text-muted-foreground font-normal leading-relaxed',
+        large: 'text-lg font-semibold text-foreground',
+        medium: 'text-base font-medium text-foreground',
+        small: 'text-sm font-medium text-foreground',
+        caption: 'text-xs font-normal text-muted-foreground',
+        muted: 'text-sm text-muted-foreground font-normal',
+        label: 'text-xs font-bold uppercase tracking-wider text-muted-foreground',
+        subtle: 'text-xs font-medium text-muted-foreground/80',
+        blockquote: 'border-l-2 border-primary pl-3 italic text-muted-foreground',
+        code: 'bg-muted rounded px-1.5 py-0.5 font-mono text-sm font-medium text-foreground',
       },
     },
     defaultVariants: {

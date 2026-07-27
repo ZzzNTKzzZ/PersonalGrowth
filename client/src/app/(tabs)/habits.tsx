@@ -1,73 +1,613 @@
-import React, { useState } from 'react';
-import { View, ScrollView, SafeAreaView } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { Calendar } from '@/components/ui/calendar';
-import HabitCard from '@/components/habits/card';
-import { Card } from '@/components/ui/card';
+import React, { useState } from "react";
+import {
+  View,
+  ScrollView,
+  SafeAreaView,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import Svg, { Circle } from "react-native-svg";
+import { Card } from "@/components/ui/card";
+import { Text } from "@/components/ui/text";
+import { Calendar } from "@/components/ui/calendar";
+
+interface HabitItem {
+  id: string;
+  name: string;
+  rule: string;
+  detail: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  bgColor: string;
+  streakDays: number;
+  progress: number;
+  checked: boolean;
+}
+
+// Component Vòng tròn tiến độ 80% Hoàn thành hôm nay
+function CircularProgress({
+  percentage = 80,
+  size = 92,
+  strokeWidth = 8,
+  color = "#22C55E",
+}) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (circumference * percentage) / 100;
+
+  return (
+    <View
+      className="items-center justify-center relative"
+      style={{ width: size, height: size }}
+    >
+      <Svg width={size} height={size}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#E5E7EB"
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View className="absolute items-center justify-center">
+        <Text className="text-xl font-extrabold text-foreground">
+          {percentage}%
+        </Text>
+        <Text className="text-[9px] text-muted-foreground text-center font-medium leading-tight">
+          Hoàn thành{"\n"}hôm nay
+        </Text>
+      </View>
+    </View>
+  );
+}
 
 export default function HabitsScreen() {
-  const [isReadChecked, setIsReadChecked] = useState(false);
-  const [isMeditateChecked, setIsMeditateChecked] = useState(false);
+  // Tab đang chọn trong phần sub-navigation
+  const [activeTab, setActiveTab] = useState<
+    "Hôm nay" | "Lịch" | "Thống kê" | "AI Coach" | "Thử thách"
+  >("Hôm nay");
+
+  // Ngày đang được chọn trên lịch
+  const [selectedDate, setSelectedDate] = useState("2026-07-23");
+
+  // Mảng danh sách thói quen
+  const [habits, setHabits] = useState<HabitItem[]>([
+    {
+      id: "1",
+      name: "Tập thể dục",
+      rule: "30 phút mỗi ngày",
+      detail: "06:30",
+      icon: "fitness-outline",
+      color: "#22C55E",
+      bgColor: "bg-emerald-500/15",
+      streakDays: 15,
+      progress: 80,
+      checked: true,
+    },
+    {
+      id: "2",
+      name: "Đọc sách",
+      rule: "30 phút mỗi ngày",
+      detail: "20:00",
+      icon: "book-outline",
+      color: "#8B5CF6",
+      bgColor: "bg-purple-500/15",
+      streakDays: 35,
+      progress: 90,
+      checked: true,
+    },
+    {
+      id: "3",
+      name: "Thiền",
+      rule: "15 phút mỗi ngày",
+      detail: "07:00",
+      icon: "leaf-outline",
+      color: "#14B8A6",
+      bgColor: "bg-teal-500/15",
+      streakDays: 7,
+      progress: 47,
+      checked: false,
+    },
+    {
+      id: "4",
+      name: "Uống đủ nước",
+      rule: "10 ly mỗi ngày",
+      detail: "8 / 10 ly",
+      icon: "water-outline",
+      color: "#3B82F6",
+      bgColor: "bg-blue-500/15",
+      streakDays: 12,
+      progress: 80,
+      checked: true,
+    },
+    {
+      id: "5",
+      name: "Ngủ trước 23:00",
+      rule: "Đi ngủ đúng giờ",
+      detail: "22:30",
+      icon: "moon-outline",
+      color: "#F59E0B",
+      bgColor: "bg-amber-500/15",
+      streakDays: 3,
+      progress: 30,
+      checked: false,
+    },
+  ]);
+
+  // Modal thêm thói quen
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newHabitName, setNewHabitName] = useState("");
+  const [newHabitRule, setNewHabitRule] = useState("");
+  const [newHabitDetail, setNewHabitDetail] = useState("");
+
+  // Toggle hoàn thành thói quen
+  const toggleHabit = (id: string) => {
+    setHabits((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextChecked = !item.checked;
+          return {
+            ...item,
+            checked: nextChecked,
+            progress: nextChecked
+              ? item.progress === 0
+                ? 100
+                : item.progress
+              : 0,
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Tính toán thống kê
+  const completedCount = habits.filter((h) => h.checked).length;
+  const totalCount = habits.length;
+  const overallPercentage =
+    totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  // Xử lý thêm habit mới
+  const handleAddHabit = () => {
+    if (!newHabitName.trim()) return;
+    const newItem: HabitItem = {
+      id: Date.now().toString(),
+      name: newHabitName.trim(),
+      rule: newHabitRule.trim() || "Thói quen hàng ngày",
+      detail: newHabitDetail.trim() || "08:00",
+      icon: "sparkles-outline",
+      color: "#22C55E",
+      bgColor: "bg-emerald-500/15",
+      streakDays: 1,
+      progress: 0,
+      checked: false,
+    };
+    setHabits((prev) => [...prev, newItem]);
+    setNewHabitName("");
+    setNewHabitRule("");
+    setNewHabitDetail("");
+    setIsAddModalOpen(false);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="p-6 pb-20" showsVerticalScrollIndicator={false}>
-        
-        {/* Tiêu đề */}
-        <Text variant="h1" className="text-primary mb-6 mt-3 text-left">
-          Habit Tracker
-        </Text>
-        
-        {/* 1. Lịch Đánh Dấu (Calendar) tích hợp Icon Lửa & Dot */}
-        <View className="mb-8">
-          <Text variant="h3" className="mb-4">Lịch trình tháng này</Text>
-          
-          <Card className="rounded-3xl p-1 bg-card border-border shadow-sm overflow-hidden">
-            <Calendar 
-              // Truyền dữ liệu Demo để xem icon lửa và dot
-              markedDates={{
-                "2026-07-20": { streak: true, marked: true, dotColor: "#86a789" },
-                "2026-07-21": { streak: true },
-                "2026-07-22": { streak: true, marked: true, dotColor: "#ef4444" },
-                "2026-07-23": { streak: true },
-                "2026-07-27": { marked: true, dotColor: "#86a789" },
-              }}
-              hideExtraDays={true}
-              firstDay={1} // Tuần bắt đầu bằng thứ 2
-            />
-          </Card>
+      <ScrollView
+        contentContainerClassName="p-5 pb-4"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ==================== 1. HEADER (Bỏ nút Setting) ==================== */}
+        <View className="mb-4 pt-2">
+          <Text variant="h1">Habits</Text>
+          <Text variant="muted" className="mt-0.5">
+            Xây dựng thói quen tốt mỗi ngày ✨
+          </Text>
         </View>
 
-        {/* 2. Danh sách Thói quen (Sử dụng Component HabitCard) */}
-        <View>
-          <Text variant="h3" className="mb-4">Thói quen hôm nay</Text>
-          
-          <HabitCard 
-            iconName="book"
-            name="Đọc sách"
-            rule="Đọc 30 trang"
-            checked={isReadChecked}
-            setChecked={setIsReadChecked}
-          />
-          
-          <HabitCard 
-            iconName="leaf"
-            name="Thiền định"
-            rule="15 phút thư giãn"
-            checked={isMeditateChecked}
-            setChecked={setIsMeditateChecked}
-          />
-          
-          <HabitCard 
-            iconName="water"
-            name="Uống nước"
-            rule="3/8 Cốc"
-            checked={false}
-            setChecked={() => {}}
-          />
+        {/* ==================== 2. CARD TỔNG QUAN HÔM NAY ==================== */}
+        <Card className="p-4 mb-5 rounded-3xl bg-card border border-emerald-500/20 shadow-xs">
+          <Text variant="h4" className="mb-3">
+            Tổng quan hôm nay
+          </Text>
+
+          <View className="flex-row items-center justify-between">
+            {/* Vòng tròn tiến độ 80% */}
+            <CircularProgress percentage={overallPercentage} color="#22C55E" />
+
+            {/* 3 Cột chỉ số */}
+            <View className="flex-1 ml-4 justify-between">
+              <View className="flex-row justify-between items-center mb-3">
+                {/* 1. Hoàn thành */}
+                <View className="items-center flex-1">
+                  <View className="flex-row items-center gap-1">
+                    <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
+                    <Text className="font-extrabold text-sm text-foreground">
+                      {completedCount} / {totalCount}
+                    </Text>
+                  </View>
+                  <Text className="text-[10px] text-muted-foreground mt-0.5">
+                    Hoàn thành
+                  </Text>
+                </View>
+
+                {/* 2. Streak hiện tại */}
+                <View className="items-center flex-1">
+                  <View className="flex-row items-center gap-1">
+                    <Ionicons name="flame" size={16} color="#EF4444" />
+                    <Text className="font-extrabold text-sm text-foreground">
+                      12
+                    </Text>
+                  </View>
+                  <Text className="text-[10px] text-muted-foreground mt-0.5">
+                    Streak hiện tại
+                  </Text>
+                </View>
+
+                {/* 3. Streak tốt nhất */}
+                <View className="items-center flex-1">
+                  <View className="flex-row items-center gap-1">
+                    <Ionicons name="trophy" size={16} color="#F59E0B" />
+                    <Text className="font-extrabold text-sm text-foreground">
+                      72
+                    </Text>
+                  </View>
+                  <Text className="text-[10px] text-muted-foreground mt-0.5">
+                    Streak tốt nhất
+                  </Text>
+                </View>
+              </View>
+
+              {/* Khung lời nhắn động viên */}
+              <View className="bg-emerald-500/10 rounded-full py-1.5 px-3 items-center justify-center">
+                <Text className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                  💚 Bạn đang làm rất tốt! Tiếp tục nhé! 💚
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Card>
+
+        {/* ==================== 3. SUB-NAVIGATION TABS ==================== */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mb-5 border-b border-border/50 pb-1"
+        >
+          {(
+            ["Hôm nay", "Lịch", "Thống kê", "AI Coach", "Thử thách"] as const
+          ).map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <TouchableOpacity
+                key={tab}
+                activeOpacity={0.7}
+                onPress={() => setActiveTab(tab)}
+                className="mr-6 pb-2 relative"
+              >
+                <Text
+                  className={`text-sm font-bold ${
+                    isActive ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                  }`}
+                >
+                  {tab}
+                </Text>
+                {isActive && (
+                  <View className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500 rounded-full" />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* ==================== 4. HABIT CỦA TÔI CARD SECTION ==================== */}
+        <Card className="rounded-3xl p-4 mb-6 bg-card border-border shadow-xs">
+          {/* Header Row */}
+          <View className="flex-row items-center justify-between mb-4">
+            <Text variant="h3">
+              Habit của tôi
+            </Text>
+            <TouchableOpacity className="flex-row items-center gap-1">
+              <Text variant="caption">
+                Sắp xếp
+              </Text>
+              <Ionicons name="chevron-down" size={14} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Danh sách các Habit */}
+          {habits.map((item) => {
+            return (
+              <View
+                key={item.id}
+                className="mb-3.5 bg-background border border-border/60 rounded-2xl p-3.5 flex-row items-center justify-between"
+              >
+                {/* Left Icon Square */}
+                <View
+                  className={`w-11 h-11 rounded-2xl items-center justify-center mr-3 ${item.bgColor}`}
+                >
+                  <Ionicons
+                    name={item.icon}
+                    size={22}
+                    color={item.color}
+                  />
+                </View>
+
+                {/* Body Content */}
+                <View className="flex-1 mr-2">
+                  {/* Row 1: Title & Streak */}
+                  <View className="flex-row items-center justify-between mb-1">
+                    <Text className="font-bold text-sm text-foreground">
+                      {item.name}
+                    </Text>
+                    <View className="flex-row items-center gap-0.5">
+                      <Ionicons name="flame" size={12} color="#EF4444" />
+                      <Text className="text-[11px] font-semibold text-muted-foreground">
+                        {item.streakDays} ngày
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Row 2: Subtitles */}
+                  <View className="flex-row items-center gap-2 mb-2">
+                    <Text className="text-[11px] text-muted-foreground font-medium">
+                      {item.rule}
+                    </Text>
+                    <Text className="text-[11px] text-muted-foreground/60">•</Text>
+                    <View className="flex-row items-center gap-0.5">
+                      <Ionicons
+                        name={item.name.includes("nước") ? "water" : "time-outline"}
+                        size={11}
+                        color={item.color}
+                      />
+                      <Text
+                        style={{ color: item.color }}
+                        className="text-[11px] font-semibold"
+                      >
+                        {item.detail}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Row 3: Horizontal Progress Bar & Percentage */}
+                  <View className="flex-row items-center gap-2">
+                    <View className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <View
+                        style={{
+                          width: `${item.progress}%`,
+                          backgroundColor: item.color,
+                        }}
+                        className="h-full rounded-full"
+                      />
+                    </View>
+                    <Text className="text-[10px] font-bold text-muted-foreground w-7 text-right">
+                      {item.progress}%
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Right Checkbox Circle */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => toggleHabit(item.id)}
+                  className="ml-1"
+                >
+                  {item.checked ? (
+                    <View className="w-7 h-7 rounded-full bg-emerald-500 items-center justify-center shadow-xs">
+                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                    </View>
+                  ) : (
+                    <View className="w-7 h-7 rounded-full border-2 border-muted-foreground/30 bg-transparent" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+
+          {/* Bottom Button inside Card */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setIsAddModalOpen(true)}
+            className="w-full py-3 mt-1 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl items-center justify-center flex-row gap-1.5"
+          >
+            <Ionicons name="add" size={18} color="#10B981" />
+            <Text className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+              Thêm habit mới
+            </Text>
+          </TouchableOpacity>
+        </Card>
+
+        {/* ==================== 5. LỊCH HABIT SECTION (Giữ phần Lịch của bạn) ==================== */}
+        <View className="mb-6">
+          <View className="flex-row items-center justify-between mb-3 px-1">
+            <Text className="font-extrabold text-base text-foreground">
+              Lịch Habit
+            </Text>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-xs font-bold text-muted-foreground">
+                Tháng 5, 2024
+              </Text>
+              <TouchableOpacity>
+                <Ionicons name="chevron-back" size={16} color="#6B7280" />
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Card className="rounded-3xl p-3 bg-card border-border shadow-xs overflow-hidden">
+            <Calendar
+              onDayPress={(day: any) => setSelectedDate(day.dateString)}
+              markedDates={(() => {
+                const baseDates: Record<string, any> = {
+                  "2026-07-20": {
+                    streak: true,
+                    dots: [
+                      { color: "#22C55E" },
+                      { color: "#8B5CF6" },
+                      { color: "#3B82F6" },
+                    ],
+                  },
+                  "2026-07-21": {
+                    streak: true,
+                    dots: [{ color: "#22C55E" }, { color: "#14B8A6" }],
+                  },
+                  "2026-07-22": {
+                    streak: true,
+                    dots: [
+                      { color: "#22C55E" },
+                      { color: "#8B5CF6" },
+                      { color: "#3B82F6" },
+                      { color: "#F59E0B" },
+                    ],
+                  },
+                  "2026-07-23": {
+                    streak: true,
+                    dots: [{ color: "#22C55E" }, { color: "#3B82F6" }],
+                  },
+                  "2026-07-24": {
+                    dots: [{ color: "#8B5CF6" }, { color: "#14B8A6" }],
+                  },
+                  "2026-07-25": {
+                    dots: [{ color: "#22C55E" }, { color: "#3B82F6" }],
+                  },
+                  "2026-07-27": {
+                    dots: [
+                      { color: "#22C55E" },
+                      { color: "#8B5CF6" },
+                      { color: "#3B82F6" },
+                    ],
+                  },
+                };
+
+                if (selectedDate) {
+                  const existing = baseDates[selectedDate] || {};
+                  baseDates[selectedDate] = {
+                    ...existing,
+                    selected: true,
+                    selectedColor: "#22C55E",
+                  };
+                }
+
+                return baseDates;
+              })()}
+              hideExtraDays={true}
+              firstDay={1}
+            />
+
+            {/* Bottom Legend chú thích màu sắc */}
+            <View className="flex-row flex-wrap justify-between items-center pt-3 border-t border-border/50 px-2 mt-2">
+              <View className="flex-row items-center gap-1 my-1">
+                <View className="w-2 h-2 rounded-full bg-emerald-500" />
+                <Text className="text-[10px] text-muted-foreground font-medium">Tập thể dục</Text>
+              </View>
+              <View className="flex-row items-center gap-1 my-1">
+                <View className="w-2 h-2 rounded-full bg-purple-500" />
+                <Text className="text-[10px] text-muted-foreground font-medium">Đọc sách</Text>
+              </View>
+              <View className="flex-row items-center gap-1 my-1">
+                <View className="w-2 h-2 rounded-full bg-teal-500" />
+                <Text className="text-[10px] text-muted-foreground font-medium">Thiền</Text>
+              </View>
+              <View className="flex-row items-center gap-1 my-1">
+                <View className="w-2 h-2 rounded-full bg-blue-500" />
+                <Text className="text-[10px] text-muted-foreground font-medium">Uống nước</Text>
+              </View>
+              <View className="flex-row items-center gap-1 my-1">
+                <View className="w-2 h-2 rounded-full bg-amber-500" />
+                <Text className="text-[10px] text-muted-foreground font-medium">Ngủ sớm</Text>
+              </View>
+              <View className="flex-row items-center gap-1 my-1">
+                <View className="w-2 h-2 rounded-full bg-gray-400" />
+                <Text className="text-[10px] text-muted-foreground font-medium">Khác</Text>
+              </View>
+            </View>
+          </Card>
         </View>
-        
       </ScrollView>
+
+      {/* MODAL THÊM HABIT MỚI */}
+      <Modal
+        visible={isAddModalOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsAddModalOpen(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center p-5">
+          <Card className="w-full max-w-md p-6 bg-card border-border rounded-3xl shadow-xl">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="font-extrabold text-lg text-foreground">
+                Thêm thói quen mới
+              </Text>
+              <TouchableOpacity onPress={() => setIsAddModalOpen(false)}>
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <Text className="text-xs font-semibold text-muted-foreground mb-1.5">
+              Tên thói quen
+            </Text>
+            <TextInput
+              value={newHabitName}
+              onChangeText={setNewHabitName}
+              placeholder="VD: Tập Yoga..."
+              placeholderTextColor="#9CA3AF"
+              className="bg-muted/30 border border-border rounded-xl px-4 py-3 text-foreground text-sm mb-3"
+            />
+
+            <Text className="text-xs font-semibold text-muted-foreground mb-1.5">
+              Mục tiêu / Quy định
+            </Text>
+            <TextInput
+              value={newHabitRule}
+              onChangeText={setNewHabitRule}
+              placeholder="VD: 30 phút mỗi ngày..."
+              placeholderTextColor="#9CA3AF"
+              className="bg-muted/30 border border-border rounded-xl px-4 py-3 text-foreground text-sm mb-3"
+            />
+
+            <Text className="text-xs font-semibold text-muted-foreground mb-1.5">
+              Thời gian
+            </Text>
+            <TextInput
+              value={newHabitDetail}
+              onChangeText={setNewHabitDetail}
+              placeholder="VD: 07:00..."
+              placeholderTextColor="#9CA3AF"
+              className="bg-muted/30 border border-border rounded-xl px-4 py-3 text-foreground text-sm mb-6"
+            />
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setIsAddModalOpen(false)}
+                className="flex-1 py-3 bg-muted rounded-xl items-center"
+              >
+                <Text className="font-semibold text-foreground">Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleAddHabit}
+                className="flex-1 py-3 bg-emerald-500 rounded-xl items-center"
+              >
+                <Text className="font-bold text-white">Tạo thói quen</Text>
+              </TouchableOpacity>
+            </View>
+          </Card>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

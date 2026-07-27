@@ -1,30 +1,30 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { Calendar as RNCalendar, CalendarProps } from "react-native-calendars";
 import { Ionicons } from "@expo/vector-icons";
-import { Card } from "./card";
+import { Text } from "./text";
+import { cn } from "@/lib/utils";
 
 export interface CustomMarking {
   streak?: boolean; // Có đang trong chuỗi (Streak) không -> Hiện icon lửa
   marked?: boolean; // Hiện dấu chấm không?
-  dotColor?: string; // Màu của dấu chấm
+  dotColor?: string; // Màu của dấu chấm đơn
+  dots?: { key?: string; color: string }[]; // Danh sách các chấm thói quen trong ngày
   selected?: boolean; // Ngày đang được chọn
+  selectedColor?: string; // Màu phủ khi ngày được chọn (Default #22C55E)
 }
 
-// 1. COMPONENT LỊCH ĐÃ ĐƯỢC CUSTOM
 export function Calendar({
   markedDates = {},
   ...props
 }: CalendarProps & { markedDates?: Record<string, CustomMarking> }) {
-  const isDark = false;
-
   return (
     <RNCalendar
       theme={{
-        calendarBackground: isDark ? "#1a1c1a" : "#ffffff",
+        calendarBackground: "transparent",
         textSectionTitleColor: "#86a789",
-        monthTextColor: isDark ? "#faf9f6" : "#1e293b",
-        arrowColor: "#86a789",
+        monthTextColor: "#1e293b",
+        arrowColor: "#22C55E",
         textMonthFontWeight: "bold",
       }}
       dayComponent={({ date, state }) => {
@@ -35,63 +35,76 @@ export function Calendar({
         const isStreak = dayMarking?.streak;
         const hasDot = dayMarking?.marked;
         const isSelected = dayMarking?.selected;
+        const selectedBgColor = dayMarking?.selectedColor || "#22C55E";
 
-        const dotColor = dayMarking?.dotColor || "#ef4444"; // Chấm mặc định màu đỏ
+        // Lấy danh sách dots từ markedDates (hỗ trợ nhiều chấm thói quen)
+        const dots =
+          dayMarking?.dots ||
+          (hasDot ? [{ color: dayMarking?.dotColor || "#22C55E" }] : []);
 
-        // Cài đặt màu chữ tuỳ theo trạng thái
-        let textColor = isDark ? "#faf9f6" : "#1a1c1a"; // Chữ bình thường
-        if (state === "disabled") textColor = isDark ? "#45474c" : "#c5c6cd"; // Chữ mờ
-        if (state === "today") textColor = "#86a789"; // Chữ ngày hôm nay
-        if (isSelected) textColor = "#ffffff"; // Chữ màu trắng khi được chọn
+        const isToday = state === "today";
+        const isDisabled = state === "disabled";
 
         return (
           <TouchableOpacity
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             onPress={() => {
               if (props.onDayPress && date) props.onDayPress(date as any);
             }}
-            style={{
-              height: 40,
-              width: 40,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: isSelected ? "#1e293b" : "transparent",
-              borderRadius: 20, // Bo tròn khi selected
-            }}
+            className={cn(
+              "h-10 w-10 items-center justify-center pb-1.5 rounded-lg relative",
+              isSelected ? "bg-primary" : "bg-transparent"
+            )}
+            style={
+              isSelected && selectedBgColor !== "#22C55E"
+                ? { backgroundColor: selectedBgColor }
+                : undefined
+            }
           >
-            {/* 1. Icon Lửa (Streak) ở góc trên bên phải */}
+            {/* 1. Icon Lửa (Streak) góc trên bên phải */}
             {isStreak && (
-              <View
-                style={{ position: "absolute", top: 0, right: 0, zIndex: 2 }}
-              >
-                <Ionicons name="flame" size={16} color="#f59e0b" />
+              <View className="absolute top-0.5 right-0.5 z-20">
+                <Ionicons name="flame" size={14} color="#F59E0B" />
               </View>
             )}
 
-            {/* 2. Chữ của Ngày */}
+            {/* 2. Chữ Số Ngày sử dụng Component Text UI custom có variant */}
             <Text
-              style={{
-                color: textColor,
-                fontWeight: state === "today" || isSelected ? "bold" : "normal",
-                zIndex: 1,
-              }}
+              variant={
+                isSelected || isToday ? "small" : isDisabled ? "subtle" : "default"
+              }
+              className={cn(
+                "text-xs z-10 text-center",
+                isSelected
+                  ? "font-bold text-white"
+                  : isDisabled
+                  ? "text-muted-foreground/40 font-normal"
+                  : isToday
+                  ? "font-extrabold text-primary"
+                  : "font-medium text-foreground"
+              )}
             >
               {date?.day}
             </Text>
 
-            {/* 3. Dấu chấm (Dot) nằm dưới cùng */}
-            {hasDot && (
-              <View
-                style={{
-                  position: "absolute",
-                  bottom: 4,
-                  width: 5,
-                  height: 5,
-                  borderRadius: 2.5,
-                  backgroundColor: dotColor,
-                  zIndex: 1,
-                }}
-              />
+            {/* 3. Các Chấm Thói Quen (Habit Dots) */}
+            {dots.length > 0 && (
+              <View className="absolute bottom-1.5 flex-row items-center justify-center gap-0.5 z-10">
+                {dots.slice(0, 4).map((dot, idx) => (
+                  <View
+                    key={idx}
+                    className={cn(
+                      "w-1 h-1 rounded-full",
+                      isSelected ? "bg-white" : ""
+                    )}
+                    style={
+                      !isSelected
+                        ? { backgroundColor: dot.color || "#22C55E" }
+                        : undefined
+                    }
+                  />
+                ))}
+              </View>
             )}
           </TouchableOpacity>
         );
@@ -101,33 +114,34 @@ export function Calendar({
   );
 }
 
-// ---------------------------------------------------------
-// 2. MÀN HÌNH DEMO ĐỂ BẠN XEM TRƯỚC KẾT QUẢ
-// ---------------------------------------------------------
 export default function MyCalendarScreen() {
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState("2026-07-23");
 
   return (
-    <Card
-      className="rounded-3xl p-1 bg-card border-2 border-border shadow-sm overflow-hidden"
-    >
-      <Calendar
-        onDayPress={(day: any) => setSelectedDate(day.dateString)}
-        markedDates={{
-          // -- CHUỖI CÓ LỬA + CHẤM ĐỎ Ở VÀI NGÀY --
-          "2026-07-20": { streak: true, marked: true, dotColor: "#86a789" },
-          "2026-07-21": { streak: true },
-          "2026-07-22": { streak: true, marked: true, dotColor: "#ef4444" },
-          "2026-07-23": { streak: true },
-
-          // -- NGÀY ĐANG CHỌN (Ghi đè) --
-          ...(selectedDate
-            ? { [selectedDate]: { selected: true, streak: true } }
-            : {}),
-        }}
-        hideExtraDays={true}
-        firstDay={1}
-      />
-    </Card>
+    <Calendar
+      onDayPress={(day: any) => setSelectedDate(day.dateString)}
+      markedDates={{
+        "2026-07-20": {
+          streak: true,
+          dots: [{ color: "#22C55E" }, { color: "#8B5CF6" }, { color: "#3B82F6" }],
+        },
+        "2026-07-21": { streak: true, dots: [{ color: "#22C55E" }] },
+        "2026-07-22": {
+          streak: true,
+          dots: [
+            { color: "#22C55E" },
+            { color: "#8B5CF6" },
+            { color: "#3B82F6" },
+            { color: "#F59E0B" },
+          ],
+        },
+        "2026-07-23": { streak: true, dots: [{ color: "#22C55E" }] },
+        ...(selectedDate
+          ? { [selectedDate]: { selected: true, selectedColor: "#22C55E" } }
+          : {}),
+      }}
+      hideExtraDays={true}
+      firstDay={1}
+    />
   );
 }

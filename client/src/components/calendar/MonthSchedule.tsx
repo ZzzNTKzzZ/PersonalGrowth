@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, TouchableOpacity } from "react-native";
-import { Calendar as RNCalendar } from "react-native-calendars";
+import { Calendar, CustomMarking } from "../ui/calendar";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "../ui/text";
 import { Badge } from "../ui/badge";
@@ -54,16 +54,9 @@ export default function MonthScheduleTimeline({
   const activeDate =
     date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
 
-  // 1. Phân loại và tạo danh sách markedDates + đếm sự kiện dồn cho từng ngày
+  // 1. Phân loại và tạo danh sách markedDates (không dùng streak) + đếm sự kiện dồn cho từng ngày
   const { markedDates, eventsByDate } = useMemo(() => {
-    const marks: Record<
-      string,
-      {
-        dots?: { key: string; color: string }[];
-        selected?: boolean;
-        selectedColor?: string;
-      }
-    > = {};
+    const marks: Record<string, CustomMarking> = {};
 
     const byDate: Record<string, CalendarEvent[]> = {};
 
@@ -107,10 +100,10 @@ export default function MonthScheduleTimeline({
       }
     });
 
-    // Tạo mảng dấu chấm (tối đa 3 chấm) cho từng ngày
+    // Tạo mảng dấu chấm thói quen/sự kiện cho từng ngày (không có icon streak)
     Object.keys(byDate).forEach((dateStr) => {
       const dayEvents = byDate[dateStr];
-      const dots = dayEvents.slice(0, 3).map((ev, idx) => {
+      const dots = dayEvents.slice(0, 4).map((ev, idx) => {
         const categoryConfig =
           CATEGORY_COLORS[ev.description || ""] || DEFAULT_COLOR;
         return {
@@ -119,16 +112,16 @@ export default function MonthScheduleTimeline({
         };
       });
 
-      marks[dateStr] = { dots };
+      marks[dateStr] = { dots, marked: dots.length > 0 };
     });
 
     // Đánh dấu ngày active đang được chọn
     const selectedKey = formatYYYYMMDD(activeDate);
-    if (!marks[selectedKey]) {
-      marks[selectedKey] = { dots: [] };
-    }
-    marks[selectedKey].selected = true;
-    marks[selectedKey].selectedColor = "#10B981";
+    marks[selectedKey] = {
+      ...marks[selectedKey],
+      selected: true,
+      selectedColor: "#10B981",
+    };
 
     return { markedDates: marks, eventsByDate: byDate };
   }, [events, activeDate]);
@@ -139,13 +132,12 @@ export default function MonthScheduleTimeline({
 
   return (
     <View className="w-full bg-background">
-      {/* 1. Lưới Lịch Tháng dạng Grid */}
+      {/* 1. Lưới Lịch Tháng dạng Grid dùng Component Calendar custom */}
       <View className="p-2">
-        <RNCalendar
+        <Calendar
           current={selectedDateKey}
-          markingType="multi-dot"
           markedDates={markedDates}
-          onDayPress={(day) => {
+          onDayPress={(day: any) => {
             if (!onChangeDate) return;
             const selected = new Date(
               day.year,
@@ -157,7 +149,7 @@ export default function MonthScheduleTimeline({
             );
             onChangeDate(selected);
           }}
-          onMonthChange={(month) => {
+          onMonthChange={(month: any) => {
             if (!onChangeDate) return;
             const selected = new Date(
               month.year,
@@ -171,27 +163,7 @@ export default function MonthScheduleTimeline({
           }}
           enableSwipeMonths={swipeEnabled}
           firstDay={1}
-          theme={{
-            backgroundColor: "transparent",
-            calendarBackground: "transparent",
-            textSectionTitleColor: "#6B7280",
-            selectedDayBackgroundColor: "#10B981",
-            selectedDayTextColor: "#ffffff",
-            todayTextColor: "#EF4444",
-            dayTextColor: "#1F2937",
-            textDisabledColor: "#D1D5DB",
-            dotColor: "#3B82F6",
-            selectedDotColor: "#ffffff",
-            arrowColor: "#6B7280",
-            monthTextColor: "#1F2937",
-            indicatorColor: "#10B981",
-            textDayFontWeight: "600",
-            textMonthFontWeight: "700",
-            textDayHeaderFontWeight: "600",
-            textDayFontSize: 13,
-            textMonthFontSize: 15,
-            textDayHeaderFontSize: 11,
-          }}
+          hideExtraDays={true}
         />
       </View>
 
