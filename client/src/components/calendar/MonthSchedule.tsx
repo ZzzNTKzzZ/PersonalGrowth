@@ -22,7 +22,7 @@ const CATEGORY_COLORS: Record<
 > = {
   "Công việc": { hex: "#3B82F6", bg: "bg-blue-500/15", icon: "briefcase-outline" },
   "Học tập": { hex: "#8B5CF6", bg: "bg-violet-500/15", icon: "book-outline" },
-  "Sức khỏe": { hex: "#10B981", bg: "bg-emerald-500/15", icon: "fitness-outline" },
+  "Sức khỏe": { hex: "#22C55E", bg: "bg-emerald-500/15", icon: "fitness-outline" },
   "Cá nhân": { hex: "#F43F5E", bg: "bg-rose-500/15", icon: "person-outline" },
   "Du lịch": { hex: "#F59E0B", bg: "bg-amber-500/15", icon: "airplane-outline" },
   "Hội thảo": { hex: "#06B6D4", bg: "bg-cyan-500/15", icon: "bulb-outline" },
@@ -120,7 +120,7 @@ export default function MonthScheduleTimeline({
     marks[selectedKey] = {
       ...marks[selectedKey],
       selected: true,
-      selectedColor: "#10B981",
+      selectedColor: "#22C55E",
     };
 
     return { markedDates: marks, eventsByDate: byDate };
@@ -175,7 +175,7 @@ export default function MonthScheduleTimeline({
         {/* Header Agenda */}
         <View className="flex-row items-center justify-between mb-3.5 px-1">
           <View className="flex-row items-center gap-2">
-            <Ionicons name="git-commit-outline" size={18} color="#10B981" />
+            <Ionicons name="git-commit-outline" size={18} color="#22C55E" />
             <Text className="font-bold text-sm text-foreground">
               {`Lịch trình ngày ${activeDate.getDate()}/${
                 activeDate.getMonth() + 1
@@ -197,7 +197,7 @@ export default function MonthScheduleTimeline({
               <Text className="text-[11px] font-semibold text-primary">
                 Xem dạng ngày
               </Text>
-              <Ionicons name="chevron-forward" size={12} color="#10B981" />
+              <Ionicons name="chevron-forward" size={12} color="#22C55E" />
             </TouchableOpacity>
           )}
         </View>

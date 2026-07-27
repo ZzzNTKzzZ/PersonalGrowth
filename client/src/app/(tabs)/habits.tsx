@@ -219,8 +219,9 @@ export default function HabitsScreen() {
         </View>
 
         {/* ==================== 2. CARD TỔNG QUAN HÔM NAY ==================== */}
-        <Card className="p-4 mb-5 rounded-3xl bg-card border border-emerald-500/20 shadow-xs">
-          <Text variant="h4" className="mb-3">
+        <Card className="p-4 mb-4 rounded-3xl bg-card border  bg-emerald-500/5 shadow-xs">
+
+          <Text variant="h4">
             Tổng quan hôm nay
           </Text>
 
@@ -314,9 +315,9 @@ export default function HabitsScreen() {
         </ScrollView>
 
         {/* ==================== 4. HABIT CỦA TÔI CARD SECTION ==================== */}
-        <Card className="rounded-3xl p-4 mb-6 bg-card border-border shadow-xs">
+        <Card className="rounded-3xl p-4 mb-4 bg-card border-border shadow-xs">
           {/* Header Row */}
-          <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center justify-between mb-3">
             <Text variant="h3">
               Habit của tôi
             </Text>
@@ -324,7 +325,7 @@ export default function HabitsScreen() {
               <Text variant="caption">
                 Sắp xếp
               </Text>
-              <Ionicons name="chevron-down" size={14} color="#6B7280" />
+              <Ionicons name="chevron-down" size={16} color="#6B7280" />
             </TouchableOpacity>
           </View>
 
@@ -333,7 +334,7 @@ export default function HabitsScreen() {
             return (
               <View
                 key={item.id}
-                className="mb-3.5 bg-background border border-border/60 rounded-2xl p-3.5 flex-row items-center justify-between"
+                className="mb-1 bg-background border border-border rounded-2xl p-2 flex-row items-center justify-between"
               >
                 {/* Left Icon Square */}
                 <View
@@ -421,35 +422,18 @@ export default function HabitsScreen() {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => setIsAddModalOpen(true)}
-            className="w-full py-3 mt-1 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl items-center justify-center flex-row gap-1.5"
+            className="w-full py-3 bg-emerald-500 rounded-xl items-center justify-center flex-row gap-1.5"
           >
-            <Ionicons name="add" size={18} color="#10B981" />
-            <Text className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+            <Ionicons name="add" size={18} color="#fff" />
+            <Text className="font-bold text-md text-[#fff]">
               Thêm habit mới
             </Text>
           </TouchableOpacity>
         </Card>
 
         {/* ==================== 5. LỊCH HABIT SECTION (Giữ phần Lịch của bạn) ==================== */}
-        <View className="mb-6">
-          <View className="flex-row items-center justify-between mb-3 px-1">
-            <Text className="font-extrabold text-base text-foreground">
-              Lịch Habit
-            </Text>
-            <View className="flex-row items-center gap-2">
-              <Text className="text-xs font-bold text-muted-foreground">
-                Tháng 5, 2024
-              </Text>
-              <TouchableOpacity>
-                <Ionicons name="chevron-back" size={16} color="#6B7280" />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Ionicons name="chevron-forward" size={16} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-          </View>
 
-          <Card className="rounded-3xl p-3 bg-card border-border shadow-xs overflow-hidden">
+          <Card className="rounded-3xl p-3 bg-card border-border shadow-xs overflow-hidden mb-6">
             <Calendar
               onDayPress={(day: any) => setSelectedDate(day.dateString)}
               markedDates={(() => {
@@ -508,36 +492,7 @@ export default function HabitsScreen() {
               hideExtraDays={true}
               firstDay={1}
             />
-
-            {/* Bottom Legend chú thích màu sắc */}
-            <View className="flex-row flex-wrap justify-between items-center pt-3 border-t border-border/50 px-2 mt-2">
-              <View className="flex-row items-center gap-1 my-1">
-                <View className="w-2 h-2 rounded-full bg-emerald-500" />
-                <Text className="text-[10px] text-muted-foreground font-medium">Tập thể dục</Text>
-              </View>
-              <View className="flex-row items-center gap-1 my-1">
-                <View className="w-2 h-2 rounded-full bg-purple-500" />
-                <Text className="text-[10px] text-muted-foreground font-medium">Đọc sách</Text>
-              </View>
-              <View className="flex-row items-center gap-1 my-1">
-                <View className="w-2 h-2 rounded-full bg-teal-500" />
-                <Text className="text-[10px] text-muted-foreground font-medium">Thiền</Text>
-              </View>
-              <View className="flex-row items-center gap-1 my-1">
-                <View className="w-2 h-2 rounded-full bg-blue-500" />
-                <Text className="text-[10px] text-muted-foreground font-medium">Uống nước</Text>
-              </View>
-              <View className="flex-row items-center gap-1 my-1">
-                <View className="w-2 h-2 rounded-full bg-amber-500" />
-                <Text className="text-[10px] text-muted-foreground font-medium">Ngủ sớm</Text>
-              </View>
-              <View className="flex-row items-center gap-1 my-1">
-                <View className="w-2 h-2 rounded-full bg-gray-400" />
-                <Text className="text-[10px] text-muted-foreground font-medium">Khác</Text>
-              </View>
-            </View>
           </Card>
-        </View>
       </ScrollView>
 
       {/* MODAL THÊM HABIT MỚI */}

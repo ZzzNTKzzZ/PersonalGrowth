@@ -22,8 +22,8 @@ export function Calendar({
     <RNCalendar
       theme={{
         calendarBackground: "transparent",
-        textSectionTitleColor: "#86a789",
-        monthTextColor: "#1e293b",
+        textSectionTitleColor: "#6B7280",
+        monthTextColor: "#111827",
         arrowColor: "#22C55E",
         textMonthFontWeight: "bold",
       }}

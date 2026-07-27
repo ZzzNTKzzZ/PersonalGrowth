@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const EVENT_COLORS = [
   { bg: "bg-blue-500/20", badge: "bg-blue-500", hex: "#3B82F6" },
-  { bg: "bg-emerald-500/20", badge: "bg-emerald-500", hex: "#10B981" },
+  { bg: "bg-emerald-500/20", badge: "bg-emerald-500", hex: "#22C55E" },
   { bg: "bg-violet-500/20", badge: "bg-violet-500", hex: "#8B5CF6" },
   { bg: "bg-amber-500/20", badge: "bg-amber-500", hex: "#F59E0B" },
   { bg: "bg-rose-500/20", badge: "bg-rose-500", hex: "#F43F5E" },

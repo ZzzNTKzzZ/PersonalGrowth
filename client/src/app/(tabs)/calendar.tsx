@@ -112,7 +112,7 @@ export default function Calendar(params: any) {
       name: "Hội thảo AI Tech All-Day",
       category: "Hội thảo",
       icon: "bulb-outline",
-      color: "#10B981",
+      color: "#22C55E",
       startDate: getDayDate(4), // Thứ 6
       endDate: getDayDate(4),
     },
@@ -136,7 +136,7 @@ export default function Calendar(params: any) {
       title: "Review Code với Frontend",
       start: new Date(new Date(getDayDate(0)).setHours(10, 0, 0, 0)),
       end: new Date(new Date(getDayDate(0)).setHours(11, 30, 0, 0)),
-      color: "#10B981",
+      color: "#22C55E",
     },
     {
       title: "Báo cáo tiến độ cho Manager",
@@ -196,7 +196,7 @@ export default function Calendar(params: any) {
       title: "Refactor Core Module",
       start: new Date(new Date(getDayDate(3)).setHours(10, 30, 0, 0)),
       end: new Date(new Date(getDayDate(3)).setHours(12, 0, 0, 0)),
-      color: "#10B981",
+      color: "#22C55E",
     },
     {
       title: "Họp Retro Sprint",
@@ -230,7 +230,7 @@ export default function Calendar(params: any) {
       title: "Lớp học Tiếng Anh Chuyên ngành",
       start: new Date(new Date(getDayDate(5)).setHours(9, 0, 0, 0)),
       end: new Date(new Date(getDayDate(5)).setHours(11, 0, 0, 0)),
-      color: "#10B981",
+      color: "#22C55E",
     },
     {
       title: "Tập Gym & Chạy bộ thể thao",
