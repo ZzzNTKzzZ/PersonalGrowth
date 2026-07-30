@@ -9,10 +9,14 @@ export default class TaskRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateTaskDto, userId: string) {
+    const { startTime, endTime, dueDate, ...rest } = data;
     return await this.prisma.task.create({
       data: {
-        userId: userId,
-        ...data,
+        userId,
+        ...rest,
+        startTime: startTime ? new Date(startTime) : null,
+        endTime: endTime ? new Date(endTime) : null,
+        dueDate: dueDate ? new Date(dueDate) : null,
       },
       include: {
         category: {
@@ -49,6 +53,9 @@ export default class TaskRepository {
           },
         },
       },
+      orderBy: {
+        startTime: "asc",
+      },
     });
   }
 
@@ -68,9 +75,22 @@ export default class TaskRepository {
   }
 
   async update(data: UpdateTaskDto, id: string) {
-    const updateData: any = { ...data };
-    if (data.status) {
-      if (data.status === TaskStatus.DONE) {
+    const { startTime, endTime, dueDate, status, ...rest } = data;
+    const updateData: any = { ...rest };
+
+    if (startTime !== undefined) {
+      updateData.startTime = startTime ? new Date(startTime) : null;
+    }
+    if (endTime !== undefined) {
+      updateData.endTime = endTime ? new Date(endTime) : null;
+    }
+    if (dueDate !== undefined) {
+      updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    }
+
+    if (status) {
+      updateData.status = status;
+      if (status === TaskStatus.DONE) {
         updateData.completedAt = new Date();
       } else {
         updateData.completedAt = null;

@@ -21,7 +21,6 @@ export default function Calendar(params: any) {
   });
   const [apiTasks, setApiTasks] = useState<ApiTask[]>([]);
 
-  // Tải danh sách công việc/lịch trình từ NestJS Backend
   useEffect(() => {
     fetchTasksFromApi();
   }, []);
@@ -38,52 +37,6 @@ export default function Calendar(params: any) {
     }
   };
 
-  const c: {
-    date: string;
-    task: { name: string; dueDate: string }[];
-  }[] = [
-    {
-      date: "20/7",
-      task: [
-        { name: "Lập kế hoạch tuần mới", dueDate: "20/7/2026 08:30" },
-        { name: "Viết báo cáo tuần", dueDate: "20/7/2026 15:00" },
-      ],
-    },
-    {
-      date: "21/7",
-      task: [{ name: "Phỏng vấn ứng viên", dueDate: "21/7/2026 09:30" }],
-    },
-    {
-      date: "22/7",
-      task: [
-        { name: "Tập gym", dueDate: "22/7/2026 17:30" },
-        { name: "Học tiếng Anh", dueDate: "22/7/2026 20:00" },
-      ],
-    },
-    {
-      date: "23/7",
-      task: [
-        { name: "Gặp khách hàng quan trọng", dueDate: "23/7/2026 10:00" },
-        { name: "Ăn trưa cùng team", dueDate: "23/7/2026 12:00" },
-      ],
-    },
-    {
-      date: "24/7",
-      task: [{ name: "Review code dự án", dueDate: "24/7/2026 14:00" }],
-    },
-    {
-      date: "25/7",
-      task: [
-        { name: "Đi siêu thị mua sắm", dueDate: "25/7/2026 09:00" },
-        { name: "Xem phim giải trí", dueDate: "25/7/2026 20:30" },
-      ],
-    },
-    {
-      date: "26/7",
-      task: [], // Ngày nghỉ, không có task
-    },
-  ];
-
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   const diffToMon = today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
@@ -95,182 +48,65 @@ export default function Calendar(params: any) {
     return d;
   };
 
-  const aDay: {
-    name: string;
-    category: string;
-    icon: keyof typeof Ionicons.glyphMap;
-    color?: string;
-    startDate?: Date;
-    endDate?: Date;
-  }[] = [
-    {
-      name: "Khóa đào tạo Leadership (3 ngày)",
-      category: "Công việc",
-      icon: "briefcase-outline",
-      color: "#8B5CF6",
-      startDate: getDayDate(0), // Thứ 2
-      endDate: getDayDate(2), // Thứ 4
-    },
-    {
-      name: "Du lịch Đà Lạt (3 ngày)",
-      category: "Du lịch",
-      icon: "airplane-outline",
-      color: "#F43F5E",
-      startDate: getDayDate(3), // Thứ 5
-      endDate: getDayDate(5), // Thứ 7
-    },
-    {
-      name: "Sinh nhật đồng nghiệp",
-      category: "Cá nhân",
-      icon: "alert-outline",
-      color: "#3B82F6",
-      startDate: getDayDate(2), // Thứ 4
-      endDate: getDayDate(2),
-    },
-    {
-      name: "Hội thảo AI Tech All-Day",
-      category: "Hội thảo",
-      icon: "bulb-outline",
-      color: "#22C55E",
-      startDate: getDayDate(4), // Thứ 6
-      endDate: getDayDate(4),
-    },
-  ];
+  // Map API Tasks từ NestJS Backend thành danh sách sự kiện hiển thị trên Lịch
+  const singleDayEvents = (apiTasks || []).map((t) => {
+    const start = t.startTime
+      ? new Date(t.startTime)
+      : t.dueDate
+      ? new Date(t.dueDate)
+      : new Date();
+    const end = t.endTime
+      ? new Date(t.endTime)
+      : new Date(start.getTime() + 60 * 60 * 1000); // 1 tiếng mặc định
 
-  const singleDayEvents = [
-    // Thứ 2 (Monday)
-    {
-      title: "Họp khởi động tuần mới",
-      start: new Date(new Date(getDayDate(0)).setHours(8, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(0)).setHours(9, 30, 0, 0)),
-      color: "#3B82F6",
-    },
-    {
-      title: "Phỏng vấn Senior Dev",
-      start: new Date(new Date(getDayDate(0)).setHours(8, 30, 0, 0)),
-      end: new Date(new Date(getDayDate(0)).setHours(9, 0, 0, 0)),
-      color: "#06B6D4",
-    },
-    {
-      title: "Review Code với Frontend",
-      start: new Date(new Date(getDayDate(0)).setHours(10, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(0)).setHours(11, 30, 0, 0)),
-      color: "#22C55E",
-    },
-    {
-      title: "Báo cáo tiến độ cho Manager",
-      start: new Date(new Date(getDayDate(0)).setHours(14, 30, 0, 0)),
-      end: new Date(new Date(getDayDate(0)).setHours(16, 0, 0, 0)),
-      color: "#8B5CF6",
-    },
+    return {
+      title: t.name,
+      start,
+      end,
+      color: t.category?.color || "#3B82F6",
+      description: t.category?.name || "Công việc",
+    };
+  });
 
-    // Thứ 3 (Tuesday)
-    {
-      title: "Workshop UI/UX Design System",
-      start: new Date(new Date(getDayDate(1)).setHours(9, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(1)).setHours(10, 30, 0, 0)),
-      color: "#F59E0B",
-    },
-    {
-      title: "Họp với Đối tác Khách hàng",
-      start: new Date(new Date(getDayDate(1)).setHours(10, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(1)).setHours(11, 30, 0, 0)),
-      color: "#EC4899",
-    },
-    {
-      title: "Lập kế hoạch Release v2.0",
-      start: new Date(new Date(getDayDate(1)).setHours(15, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(1)).setHours(16, 30, 0, 0)),
-      color: "#3B82F6",
-    },
+  // Tự động nhóm task theo từng ngày trong tuần cho WeekDateSelector
+  const c = Array.from({ length: 7 }).map((_, idx) => {
+    const dayDate = getDayDate(idx);
+    const dayStr = `${dayDate.getDate()}/${dayDate.getMonth() + 1}`;
+    const dayTasks = (apiTasks || []).filter((t) => {
+      const taskDate = t.startTime ? new Date(t.startTime) : t.dueDate ? new Date(t.dueDate) : null;
+      return taskDate && taskDate.toDateString() === dayDate.toDateString();
+    });
 
-    // Thứ 4 (Wednesday)
-    {
-      title: "Đào tạo Security & Auth Flow",
-      start: new Date(new Date(getDayDate(2)).setHours(8, 30, 0, 0)),
-      end: new Date(new Date(getDayDate(2)).setHours(10, 0, 0, 0)),
-      color: "#EF4444",
-    },
-    {
-      title: "Testing & QA Benchmark",
-      start: new Date(new Date(getDayDate(2)).setHours(10, 30, 0, 0)),
-      end: new Date(new Date(getDayDate(2)).setHours(12, 0, 0, 0)),
-      color: "#6366F1",
-    },
-    {
-      title: "Sync 1-on-1 với Manager",
-      start: new Date(new Date(getDayDate(2)).setHours(14, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(2)).setHours(15, 0, 0, 0)),
-      color: "#06B6D4",
-    },
+    return {
+      date: dayStr,
+      task: dayTasks.map((t) => ({
+        name: t.name,
+        dueDate: t.startTime ? new Date(t.startTime).toLocaleString("vi-VN") : "",
+      })),
+    };
+  });
 
-    // Thứ 5 (Thursday)
-    {
-      title: "Demo Sản phẩm cho Ban giám đốc",
-      start: new Date(new Date(getDayDate(3)).setHours(9, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(3)).setHours(10, 0, 0, 0)),
-      color: "#8B5CF6",
-    },
-    {
-      title: "Refactor Core Module",
-      start: new Date(new Date(getDayDate(3)).setHours(10, 30, 0, 0)),
-      end: new Date(new Date(getDayDate(3)).setHours(12, 0, 0, 0)),
-      color: "#22C55E",
-    },
-    {
-      title: "Họp Retro Sprint",
-      start: new Date(new Date(getDayDate(3)).setHours(14, 30, 0, 0)),
-      end: new Date(new Date(getDayDate(3)).setHours(16, 0, 0, 0)),
-      color: "#F59E0B",
-    },
-
-    // Thứ 6 (Friday)
-    {
-      title: "Townhall Toàn Công Ty Q3",
-      start: new Date(new Date(getDayDate(4)).setHours(8, 30, 0, 0)),
-      end: new Date(new Date(getDayDate(4)).setHours(10, 0, 0, 0)),
-      color: "#3B82F6",
-    },
-    {
-      title: "Tổng kết mục tiêu OKR",
-      start: new Date(new Date(getDayDate(4)).setHours(10, 30, 0, 0)),
-      end: new Date(new Date(getDayDate(4)).setHours(11, 30, 0, 0)),
-      color: "#EC4899",
-    },
-    {
-      title: "Happy Hour & Teambuilding",
-      start: new Date(new Date(getDayDate(4)).setHours(15, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(4)).setHours(17, 0, 0, 0)),
-      color: "#F59E0B",
-    },
-
-    // Thứ 7 (Saturday)
-    {
-      title: "Lớp học Tiếng Anh Chuyên ngành",
-      start: new Date(new Date(getDayDate(5)).setHours(9, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(5)).setHours(11, 0, 0, 0)),
-      color: "#22C55E",
-    },
-    {
-      title: "Tập Gym & Chạy bộ thể thao",
-      start: new Date(new Date(getDayDate(5)).setHours(14, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(5)).setHours(16, 0, 0, 0)),
-      color: "#06B6D4",
-    },
-
-    // Chủ nhật (Sunday)
-    {
-      title: "Gặp mặt CLB Sách & Cà phê",
-      start: new Date(new Date(getDayDate(6)).setHours(10, 0, 0, 0)),
-      end: new Date(new Date(getDayDate(6)).setHours(12, 0, 0, 0)),
-      color: "#8B5CF6",
-    },
-  ];
+  // Lọc các sự kiện diễn ra nhiều ngày (All Day / Multi-day) từ API
+  const aDay = (apiTasks || [])
+    .filter((t) => {
+      if (!t.startTime || !t.endTime) return false;
+      const startDate = new Date(t.startTime);
+      const endDate = new Date(t.endTime);
+      return endDate.getDate() !== startDate.getDate();
+    })
+    .map((t) => ({
+      name: t.name,
+      category: t.category?.name || "Công việc",
+      icon: (t.category?.color ? "briefcase-outline" : "calendar-outline") as any,
+      color: t.category?.color || "#8B5CF6",
+      startDate: new Date(t.startTime!),
+      endDate: new Date(t.endTime!),
+    }));
 
   return (
     <View className="flex-1 bg-background relative">
-      <ScrollView contentContainerClassName="p-6">
-        <View className="flex-row justify-between items-center pb-6">
+      <ScrollView contentContainerClassName="p-5">
+        <View className="flex-row justify-between items-center pb-4">
           <View className="flex-col flex-1 pr-4">
             <View className="flex-row items-center flex-wrap">
               <Text variant="h3">Chào buổi sáng, Khánh 👋</Text>
@@ -287,9 +123,16 @@ export default function Calendar(params: any) {
 
         <View className="flex-row justify-between items-center mb-4">
           <View className="flex-1">
-            <Text variant="h1">
-              Lịch trình
-            </Text>
+            <View className="flex-row items-baseline gap-1.5 flex-wrap">
+              <Text variant="h1">Lịch trình</Text>
+              <Text className="text-sm font-semibold text-primary">
+                ({selectedDate.toLocaleDateString("vi-VN", {
+                  weekday: "short",
+                  day: "2-digit",
+                  month: "2-digit",
+                })})
+              </Text>
+            </View>
           </View>
 
           <View className="flex-1">
@@ -317,16 +160,14 @@ export default function Calendar(params: any) {
         </View>
 
         {typeCalendar.value === "day" && (
-          <Card className="my-3 p-0 overflow-hidden">
-            <View className="py-2">
-              <WeekDateSelector
-                data={c}
-                type={typeCalendar.value}
-                allDay={aDay}
-                selectedDate={selectedDate}
-                onSelectDate={setSelectedDate}
-              />
-            </View>
+          <Card className="my-2 p-0 overflow-hidden">
+            <WeekDateSelector
+              data={c}
+              type={typeCalendar.value}
+              allDay={aDay}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
             <DayScheduleTimeline
               events={singleDayEvents}
               mode="day"
@@ -338,16 +179,14 @@ export default function Calendar(params: any) {
         )}
 
         {typeCalendar.value === "week" && (
-          <Card className="my-3 p-0 overflow-hidden">
-            <View className="py-2">
-              <WeekDateSelector
-                data={c}
-                type={typeCalendar.value}
-                allDay={aDay}
-                selectedDate={selectedDate}
-                onSelectDate={setSelectedDate}
-              />
-            </View>
+          <Card className="my-2 p-0 overflow-hidden">
+            <WeekDateSelector
+              data={c}
+              type={typeCalendar.value}
+              allDay={aDay}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
             <WeekScheduleTimeLine
               events={singleDayEvents}
               date={selectedDate}
@@ -359,7 +198,7 @@ export default function Calendar(params: any) {
         )}
 
         {typeCalendar.value === "month" && (
-          <Card className="my-3 p-0 overflow-hidden">
+          <Card className="my-2 p-0 overflow-hidden">
             <MonthScheduleTimeline
               events={[
                 ...singleDayEvents,

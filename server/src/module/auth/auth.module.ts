@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtModule } from '@nestjs/jwt';
@@ -7,6 +7,7 @@ import AuthRepository from './auth.repository.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { TokenInterceptor } from '../../common/interceptor/token.interceptor.js';
 
+@Global()
 @Module({
   imports: [
     JwtModule.registerAsync({

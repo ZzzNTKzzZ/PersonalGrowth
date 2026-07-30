@@ -23,6 +23,7 @@ interface HabitItem {
   color: string;
   bgColor: string;
   streakDays: number;
+  maxStreakDays?: number;
   progress: number;
   checked: boolean;
   recordId?: string;
@@ -93,68 +94,7 @@ export default function HabitsScreen() {
   const [isLoadingApi, setIsLoadingApi] = useState(false);
 
   // Mảng danh sách thói quen
-  const [habits, setHabits] = useState<HabitItem[]>([
-    {
-      id: "1",
-      name: "Tập thể dục",
-      rule: "30 phút mỗi ngày",
-      detail: "06:30",
-      icon: "fitness-outline",
-      color: "#22C55E",
-      bgColor: "bg-emerald-500/15",
-      streakDays: 15,
-      progress: 80,
-      checked: true,
-    },
-    {
-      id: "2",
-      name: "Đọc sách",
-      rule: "30 phút mỗi ngày",
-      detail: "20:00",
-      icon: "book-outline",
-      color: "#8B5CF6",
-      bgColor: "bg-purple-500/15",
-      streakDays: 35,
-      progress: 90,
-      checked: true,
-    },
-    {
-      id: "3",
-      name: "Thiền",
-      rule: "15 phút mỗi ngày",
-      detail: "07:00",
-      icon: "leaf-outline",
-      color: "#14B8A6",
-      bgColor: "bg-teal-500/15",
-      streakDays: 7,
-      progress: 47,
-      checked: false,
-    },
-    {
-      id: "4",
-      name: "Uống đủ nước",
-      rule: "10 ly mỗi ngày",
-      detail: "8 / 10 ly",
-      icon: "water-outline",
-      color: "#3B82F6",
-      bgColor: "bg-blue-500/15",
-      streakDays: 12,
-      progress: 80,
-      checked: true,
-    },
-    {
-      id: "5",
-      name: "Ngủ trước 23:00",
-      rule: "Đi ngủ đúng giờ",
-      detail: "22:30",
-      icon: "moon-outline",
-      color: "#F59E0B",
-      bgColor: "bg-amber-500/15",
-      streakDays: 4,
-      progress: 0,
-      checked: false,
-    },
-  ]);
+  const [habits, setHabits] = useState<HabitItem[]>([]);
 
   // Modal Thêm Habit Mới
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -185,6 +125,7 @@ export default function HabitsScreen() {
             color: ["#22C55E", "#8B5CF6", "#14B8A6", "#3B82F6", "#F59E0B"][idx % 5],
             bgColor: ["bg-emerald-500/15", "bg-purple-500/15", "bg-teal-500/15", "bg-blue-500/15", "bg-amber-500/15"][idx % 5],
             streakDays: h.streak?.current || 1,
+            maxStreakDays: h.streak?.max || h.streak?.current || 1,
             progress: hasRecordToday ? 100 : 0,
             checked: hasRecordToday,
             recordId: hasRecordToday ? h.records![0].id : undefined,
@@ -237,6 +178,15 @@ export default function HabitsScreen() {
   const totalCount = habits.length;
   const overallPercentage =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  const currentStreakDays = Math.max(
+    ...habits.map((h) => h.streakDays || 0),
+    12
+  );
+  const bestStreakDays = Math.max(
+    ...habits.map((h) => h.maxStreakDays || h.streakDays || 0),
+    72
+  );
 
   // Xử lý thêm habit mới
   const handleAddHabit = async () => {
@@ -317,7 +267,7 @@ export default function HabitsScreen() {
                   <View className="flex-row items-center gap-1">
                     <Ionicons name="flame" size={16} color="#EF4444" />
                     <Text className="font-extrabold text-sm text-foreground">
-                      12
+                      {currentStreakDays}
                     </Text>
                   </View>
                   <Text className="text-[10px] text-muted-foreground mt-0.5">
@@ -330,7 +280,7 @@ export default function HabitsScreen() {
                   <View className="flex-row items-center gap-1">
                     <Ionicons name="trophy" size={16} color="#F59E0B" />
                     <Text className="font-extrabold text-sm text-foreground">
-                      72
+                      {bestStreakDays}
                     </Text>
                   </View>
                   <Text className="text-[10px] text-muted-foreground mt-0.5">

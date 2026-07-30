@@ -133,7 +133,7 @@ export default function MonthScheduleTimeline({
   return (
     <View className="w-full bg-background">
       {/* 1. Lưới Lịch Tháng dạng Grid dùng Component Calendar custom */}
-      <View className="p-2">
+      <View className="px-1 py-1">
         <Calendar
           current={selectedDateKey}
           markedDates={markedDates}

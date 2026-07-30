@@ -69,8 +69,10 @@ model Category {
 
 model Task {
   id          String     @id @default(cuid())
-  name       String
+  name        String
   description String?
+  startTime   DateTime?
+  endTime     DateTime?
   dueDate     DateTime?
   status      TaskStatus @default(TODO)
   completedAt DateTime?

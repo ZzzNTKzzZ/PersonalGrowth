@@ -3,21 +3,22 @@ import { TaskStatus } from "../../../generated/prisma/enums.js";
 export interface TaskResponse {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   status: TaskStatus;
-  dueDate: Date;
-  completedAt: null | Date;
+  startTime?: Date | null;
+  endTime?: Date | null;
+  dueDate?: Date | null;
+  completedAt?: Date | null;
   createdAt: Date;
-  category: {
+  category?: {
     id: string;
     name: string;
-    color?: string;
-  };
+    color?: string | null;
+  } | null;
 }
 
-
 export interface TaskFilter {
-  status?: TaskStatus
-  categoryId?: string
-  dueDate?: string 
+  status?: TaskStatus;
+  categoryId?: string;
+  dueDate?: string;
 }

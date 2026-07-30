@@ -10,6 +10,7 @@ import { MoodModule } from './module/mood/mood.module.js';
 import { JournalModule } from './module/journal/journal.module.js';
 import { DayReviewModule } from './module/day-review/day-review.module.js';
 import { DashboardModule } from './module/dashboard/dashboard.module.js';
+import { AppController } from './module/app/app.controller.js';
 
 @Module({
   imports: [
@@ -25,7 +26,10 @@ import { DashboardModule } from './module/dashboard/dashboard.module.js';
     MoodModule,
     JournalModule,
     DayReviewModule,
-    DashboardModule
+    DashboardModule,
   ],
+  controllers: [
+    AppController
+  ]
 })
 export class AppModule {}

@@ -7,14 +7,16 @@ export interface Task {
   name: string;
   description?: string;
   status: TaskStatus;
-  dueDate: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  dueDate?: string | null;
   completedAt?: string | null;
   createdAt: string;
   category?: {
     id: string;
     name: string;
-    color?: string;
-  };
+    color?: string | null;
+  } | null;
 }
 
 export interface TaskFilterParams {
@@ -26,6 +28,8 @@ export interface TaskFilterParams {
 export interface CreateTaskPayload {
   name: string;
   description?: string;
+  startTime?: string;
+  endTime?: string;
   dueDate?: string;
   categoryId?: string;
 }
@@ -33,6 +37,8 @@ export interface CreateTaskPayload {
 export interface UpdateTaskPayload {
   name?: string;
   description?: string;
+  startTime?: string;
+  endTime?: string;
   dueDate?: string;
   status?: TaskStatus;
   categoryId?: string | null;

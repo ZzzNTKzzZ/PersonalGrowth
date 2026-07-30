@@ -52,55 +52,115 @@ export default function DayScheduleTimeline({
     return () => clearInterval(interval);
   }, []);
 
-  // 1. Tính toán minHour và maxHour: Cắt bỏ hoàn toàn các giờ trước mốc (1 giờ trước công việc đầu tiên)
+  // Lọc các sự kiện thuộc ngày đang chọn VÀ loại bỏ các sự kiện kéo dài > 16 tiếng (như Du lịch 3 ngày) khỏi lưới giờ
+  const activeEvents = useMemo(() => {
+    if (!date || !events) return events || [];
+    const targetDateStr = date.toDateString();
+    return events.filter((e) => {
+      const s = new Date(e.start);
+      const durationHours =
+        (e.end.getTime() - e.start.getTime()) / (1000 * 60 * 60);
+      return (mode !== "day" || s.toDateString() === targetDateStr) && durationHours < 16;
+    });
+  }, [events, date, mode]);
+
+  // Hàm tạo key duy nhất cho mỗi sự kiện (dựa trên tiêu đề + thời gian)
+  const getEventKey = (e: CalendarEvent) =>
+    `${e.title}_${new Date(e.start).getTime()}_${new Date(e.end).getTime()}`;
+
+  // Thuật toán phân bổ cột động thông minh theo mốc thời gian thực (Smart Dynamic Column Slotting)
+  const eventColumnMap = useMemo(() => {
+    const map = new Map<string, { count: number; pos: number }>();
+    if (!activeEvents || activeEvents.length === 0) return map;
+
+    // Sắp xếp sự kiện theo thời gian bắt đầu (sự kiện kéo dài hơn xếp trước)
+    const sorted = [...activeEvents].sort((a, b) => {
+      if (a.start.getTime() !== b.start.getTime()) {
+        return a.start.getTime() - b.start.getTime();
+      }
+      return b.end.getTime() - a.end.getTime();
+    });
+
+    // Mảng lưu thời điểm kết thúc của từng cột (slot)
+    const slotsEndTime: number[] = [];
+
+    sorted.forEach((event) => {
+      const eStart = new Date(event.start).getTime();
+      const eEnd = new Date(event.end).getTime();
+
+      // 1. Tìm tất cả các sự kiện giao nhau về mặt thời gian với event này
+      const overlapping = sorted.filter(
+        (other) =>
+          new Date(other.start).getTime() < eEnd &&
+          new Date(other.end).getTime() > eStart
+      );
+
+      // 2. Tái sử dụng slot đầu tiên đã giải phóng (slot kết thúc <= eStart)
+      let assignedSlot = -1;
+      for (let i = 0; i < slotsEndTime.length; i++) {
+        if (slotsEndTime[i] <= eStart) {
+          assignedSlot = i;
+          slotsEndTime[i] = eEnd;
+          break;
+        }
+      }
+
+      // Nếu không có slot nào rảnh, mở slot mới
+      if (assignedSlot === -1) {
+        assignedSlot = slotsEndTime.length;
+        slotsEndTime.push(eEnd);
+      }
+
+      // 3. Tính số lượng công việc cùng diễn ra đồng thời nhiều nhất trong khung giờ này
+      let maxSimultaneousInWindow = 1;
+      overlapping.forEach((other) => {
+        const oStart = new Date(other.start).getTime();
+        const oEnd = new Date(other.end).getTime();
+        const concurrent = overlapping.filter(
+          (o) =>
+            new Date(o.start).getTime() < oEnd &&
+            new Date(o.end).getTime() > oStart
+        );
+        if (concurrent.length > maxSimultaneousInWindow) {
+          maxSimultaneousInWindow = concurrent.length;
+        }
+      });
+
+      map.set(getEventKey(event), {
+        pos: assignedSlot,
+        count: Math.max(maxSimultaneousInWindow, assignedSlot + 1),
+      });
+    });
+
+    return map;
+  }, [activeEvents]);
+
+  // 1. Tính toán minHour và maxHour
   const { minHour, maxHour, scrollOffsetMinutes } = useMemo(() => {
-    if (!events || events.length === 0) {
+    if (!activeEvents || activeEvents.length === 0) {
       return { minHour: 6, maxHour: 23, scrollOffsetMinutes: 6 * 60 };
     }
 
-    // Lọc các sự kiện theo giờ (bỏ qua sự kiện cả ngày / nhiều ngày kéo dài > 20 tiếng)
-    const timedEvents = events.filter((e) => {
-      const durationHours =
-        (e.end.getTime() - e.start.getTime()) / (1000 * 60 * 60);
-      return durationHours < 20;
-    });
-
-    const targetEvents = timedEvents.length > 0 ? timedEvents : events;
-
-    // Tìm công việc có thời gian bắt đầu sớm nhất
-    const earliestEvent = targetEvents.reduce((earliest, current) => {
+    const earliestEvent = activeEvents.reduce((earliest, current) => {
       return current.start.getTime() < earliest.start.getTime()
         ? current
         : earliest;
-    }, targetEvents[0]);
-
-    // Tìm công việc có thời gian kết thúc muộn nhất
-    const latestEvent = targetEvents.reduce((latest, current) => {
-      return current.end.getTime() > latest.end.getTime()
-        ? current
-        : latest;
-    }, targetEvents[0]);
+    }, activeEvents[0]);
 
     const startHour = earliestEvent.start.getHours();
-    const endHour = Math.ceil(
-      latestEvent.end.getHours() + latestEvent.end.getMinutes() / 60
-    );
-
-    // Lấy mốc giờ bắt đầu sớm nhất (lùi 1 giờ trước sự kiện, VD: sự kiện 8h thì hiển thị từ 7h)
     const min = Math.max(0, startHour - 1);
-    const max = 23;
 
     return {
       minHour: min,
-      maxHour: max,
+      maxHour: 23,
       scrollOffsetMinutes: min * 60,
     };
-  }, [events]);
+  }, [activeEvents]);
 
   return (
     <View style={{ flex: 1 }}>
       <Calendar
-        events={events}
+        events={activeEvents}
         height={height}
         mode={mode}
         date={date}
@@ -187,6 +247,7 @@ export default function DayScheduleTimeline({
                 <View
                   style={{
                     position: "absolute",
+                    top: Math.max(0, (now.getMinutes() / 60) * cellHeight),
                     left: 2,
                     right: 2,
                     backgroundColor: "#EF4444",
@@ -197,7 +258,7 @@ export default function DayScheduleTimeline({
                     zIndex: 999,
                   }}
                 >
-                  <Text className="text-white text-[9px] font-bold text-center">
+                  <Text variant={'p'} className="text-white text-[12px] font-bold text-center">
                     {formatTime(now)}
                   </Text>
                 </View>
@@ -212,7 +273,7 @@ export default function DayScheduleTimeline({
           hideHeader ? { display: "none", height: 0 } : undefined
         }
         calendarContainerStyle={{ paddingHorizontal: 0, marginHorizontal: 0 }}
-        bodyContainerStyle={{ paddingHorizontal: 0, marginHorizontal: 0, marginRight: 5 }}
+        bodyContainerStyle={{ paddingHorizontal: 0, marginHorizontal: 0, marginRight: 0 }}
         calendarCellStyle={() => ({
           borderTopWidth: 1,
           borderTopColor: "#E5E7EB",
@@ -235,15 +296,18 @@ export default function DayScheduleTimeline({
               ? `${mainColor}33`
               : "rgba(59, 130, 246, 0.15)";
 
-          const count = event.overlapCount || 1;
-          const pos = event.overlapPosition || 0;
-          const gap = 12; // 4px mỗi bên -> tạo khoảng cách 8px rộng rãi giữa các sự kiện trùng mốc giờ
+          // Lấy vị trí cột rảnh (pos) và số lượng slot đồng thời từ eventColumnMap bằng string key
+          const eventKey = getEventKey(event);
+          const overlapInfo = eventColumnMap.get(eventKey) || {
+            count: event.overlapCount || 1,
+            pos: event.overlapPosition || 0,
+          };
+          const count = overlapInfo.count;
+          const pos = overlapInfo.pos;
 
           const overlapStyle: ViewStyle = {
             width: (count > 1 ? `${100 / count - 2}%` : "100%") as DimensionValue,
-            left: (count > 1 ? `${(pos / count) * 100}%` : "0%") as DimensionValue,
-            paddingLeft: 0,
-            paddingRight: count > 1 && pos < count - 1 ? gap : 0,
+            left: (count > 1 ? `${(pos / count ) * 100}%` : "0%") as DimensionValue,
             start: undefined,
             end: undefined,
           };

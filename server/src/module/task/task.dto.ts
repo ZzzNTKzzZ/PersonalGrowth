@@ -1,24 +1,31 @@
-import { IsDate, IsDateString, IsEnum, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { IsDateString, IsEnum, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 import { TaskStatus } from "../../../generated/prisma/enums.js";
-
 
 export class CreateTaskDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name!: string
+  name!: string;
 
   @IsString()
   @IsOptional()
-  description!: string
+  description?: string;
 
   @IsDateString()
   @IsOptional()
-  dueDate!: string
+  startTime?: string;
+
+  @IsDateString()
+  @IsOptional()
+  endTime?: string;
+
+  @IsDateString()
+  @IsOptional()
+  dueDate?: string;
 
   @IsString()
   @IsOptional()
-  categoryId!: string
+  categoryId?: string;
 }
 
 export class UpdateTaskDto {
@@ -31,6 +38,14 @@ export class UpdateTaskDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsDateString()
+  @IsOptional()
+  startTime?: string;
+
+  @IsDateString()
+  @IsOptional()
+  endTime?: string;
 
   @IsDateString()
   @IsOptional()

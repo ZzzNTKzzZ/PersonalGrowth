@@ -42,52 +42,42 @@ export default function WeekScheduleTimeLine({
     return () => clearInterval(interval);
   }, []);
 
-  // Tính toán minHour và maxHour
-  const { minHour, maxHour, scrollOffsetMinutes } = useMemo(() => {
-    if (!events || events.length === 0) {
-      return { minHour: 6, maxHour: 23, scrollOffsetMinutes: 6 * 60 };
-    }
-
-    // Lọc các sự kiện theo giờ (bỏ qua sự kiện cả ngày / nhiều ngày kéo dài > 20 tiếng)
-    const timedEvents = events.filter((e) => {
+  // Lọc chỉ giữ các sự kiện trong ngày (loại bỏ các sự kiện kéo dài nhiều ngày > 20 tiếng khỏi lưới giờ)
+  const timedEventsOnly = useMemo(() => {
+    if (!events) return [];
+    return events.filter((e) => {
       const durationHours =
         (e.end.getTime() - e.start.getTime()) / (1000 * 60 * 60);
       return durationHours < 20;
     });
+  }, [events]);
 
-    const targetEvents = timedEvents.length > 0 ? timedEvents : events;
+  // Tính toán minHour và maxHour
+  const { minHour, maxHour, scrollOffsetMinutes } = useMemo(() => {
+    if (!timedEventsOnly || timedEventsOnly.length === 0) {
+      return { minHour: 6, maxHour: 23, scrollOffsetMinutes: 6 * 60 };
+    }
 
-    const earliestEvent = targetEvents.reduce((earliest, current) => {
+    const earliestEvent = timedEventsOnly.reduce((earliest, current) => {
       return current.start.getTime() < earliest.start.getTime()
         ? current
         : earliest;
-    }, targetEvents[0]);
-
-    const latestEvent = targetEvents.reduce((latest, current) => {
-      return current.end.getTime() > latest.end.getTime()
-        ? current
-        : latest;
-    }, targetEvents[0]);
+    }, timedEventsOnly[0]);
 
     const startHour = earliestEvent.start.getHours();
-    const endHour = Math.ceil(
-      latestEvent.end.getHours() + latestEvent.end.getMinutes() / 60
-    );
-
     const min = Math.max(0, startHour - 1);
-    const max = Math.min(23, Math.max(min + 2, endHour + 1));
 
     return {
       minHour: min,
-      maxHour: max,
+      maxHour: 23,
       scrollOffsetMinutes: min * 60,
     };
-  }, [events]);
+  }, [timedEventsOnly]);
 
   return (
     <View style={{ flex: 1, width: "100%" }}>
       <Calendar
-        events={events}
+        events={timedEventsOnly}
         height={height}
         mode="week"
         date={date}
@@ -178,6 +168,7 @@ export default function WeekScheduleTimeLine({
                 <View
                   style={{
                     position: "absolute",
+                    top: Math.max(0, (now.getMinutes() / 60) * cellHeight - 8),
                     left: 2,
                     right: 2,
                     backgroundColor: "#EF4444",
@@ -218,13 +209,9 @@ export default function WeekScheduleTimeLine({
               ? `${mainColor}33`
               : "rgba(59, 130, 246, 0.15)";
 
-          const durationMinutes =
-            (event.end.getTime() - event.start.getTime()) / (1000 * 60);
-          const isShortEvent = durationMinutes <= 35;
-
           const count = event.overlapCount || 1;
           const pos = event.overlapPosition || 0;
-          const gap = 2; // Khoảng cách nhỏ giữa các sự kiện trùng mốc giờ trong cùng 1 cột ngày
+          const gap = 1;
 
           const overlapStyle: ViewStyle = {
             width: (count > 1 ? `${100 / count - 1}%` : "100%") as DimensionValue,
@@ -250,18 +237,15 @@ export default function WeekScheduleTimeLine({
                   elevation: 0,
                 },
               ]}
-              className={`border-l-4 rounded-lg px-1 overflow-hidden ${
-                isShortEvent ? "py-0.5 justify-center" : "py-1"
-              }`}
+              className="border-l-2 rounded-sm px-0.5 py-0.5 overflow-hidden justify-center"
             >
-              <View className="flex-1 justify-center">
-                <Text
-                  numberOfLines={isShortEvent ? 1 : undefined}
-                  className="font-semibold text-[11px] text-foreground"
-                >
-                  {event.title}
-                </Text>
-              </View>
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                className="font-bold text-[9px] text-foreground leading-tight"
+              >
+                {event.title}
+              </Text>
             </TouchableOpacity>
           );
         }}
