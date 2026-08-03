@@ -8,10 +8,12 @@ import DayScheduleTimeline from "@/components/calendar/DayScheduleTimeline";
 import WeekDateSelector from "@/components/calendar/WeekDateSelector";
 import WeekScheduleTimeLine from "@/components/calendar/WeekSchedule";
 import MonthScheduleTimeline from "@/components/calendar/MonthSchedule";
+import EventModal from "@/components/calendar/EventModal";
 import { taskApi, Task as ApiTask } from "@/services/task.service";
 
 export default function Calendar(params: any) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [typeCalendar, setTypeCalendar] = useState<{
     name: "Ngày" | "Tuần" | "Tháng";
     value: "day" | "week" | "month";
@@ -223,13 +225,18 @@ export default function Calendar(params: any) {
       {/* Floating Action Button (FAB) thêm sự kiện / công việc mới */}
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={() => {
-          console.log("Tạo sự kiện/công việc mới");
-        }}
+        onPress={() => setIsModalVisible(true)}
         className="absolute bottom-6 right-6 w-14 h-14 rounded-full border-[#ffffff] border-2 bg-primary items-center justify-center shadow-lg  elevation-6 z-50"
       >
         <Ionicons name="add" size={30} color="#FFFFFF" />
       </TouchableOpacity>
+
+      <EventModal 
+        visible={isModalVisible} 
+        onClose={() => setIsModalVisible(false)} 
+        onSuccess={() => fetchTasksFromApi()} 
+        initialDate={selectedDate}
+      />
     </View>
   );
 }
