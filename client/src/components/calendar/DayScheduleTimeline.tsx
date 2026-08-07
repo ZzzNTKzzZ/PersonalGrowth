@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Text } from "../ui/text";
 
 export type CalendarEvent = {
+  id?: string;
   title: string;
   start: Date;
   end: Date;

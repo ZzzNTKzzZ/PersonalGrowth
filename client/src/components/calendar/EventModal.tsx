@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, View, TextInput, TouchableOpacity, Alert, Platform } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,30 @@ interface EventModalProps {
   onClose: () => void;
   onSuccess: () => void;
   initialDate?: Date;
+  eventToEdit?: any;
 }
 
-export default function EventModal({ visible, onClose, onSuccess, initialDate }: EventModalProps) {
+export default function EventModal({ visible, onClose, onSuccess, initialDate, eventToEdit }: EventModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState(initialDate || new Date());
   const [endTime, setEndTime] = useState(new Date((initialDate || new Date()).getTime() + 60 * 60 * 1000));
+  
+  useEffect(() => {
+    if (visible) {
+      if (eventToEdit) {
+        setName(eventToEdit.title);
+        setDescription(eventToEdit.description || "");
+        setStartTime(new Date(eventToEdit.start));
+        setEndTime(new Date(eventToEdit.end));
+      } else {
+        setName("");
+        setDescription("");
+        setStartTime(initialDate || new Date());
+        setEndTime(new Date((initialDate || new Date()).getTime() + 60 * 60 * 1000));
+      }
+    }
+  }, [eventToEdit, initialDate, visible]);
   
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
@@ -33,21 +50,48 @@ export default function EventModal({ visible, onClose, onSuccess, initialDate }:
     }
 
     try {
-      await taskApi.createTask({
-        name,
-        description,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-      });
+      if (eventToEdit?.id) {
+        await taskApi.updateTask(eventToEdit.id, {
+          name,
+          description,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+        });
+      } else {
+        await taskApi.createTask({
+          name,
+          description,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+        });
+      }
       onSuccess();
       onClose();
-      // Reset form
-      setName("");
-      setDescription("");
     } catch (error) {
       console.error(error);
-      Alert.alert("Lỗi", "Không thể tạo sự kiện, vui lòng thử lại sau.");
+      Alert.alert("Lỗi", eventToEdit ? "Không thể cập nhật sự kiện." : "Không thể tạo sự kiện.");
     }
+  };
+
+  const handleDelete = () => {
+    if (!eventToEdit?.id) return;
+    Alert.alert("Xóa sự kiện", "Bạn có chắc chắn muốn xóa sự kiện này không?", [
+      { text: "Hủy", style: "cancel" },
+      {
+        text: "Xóa",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await taskApi.deleteTask(eventToEdit.id);
+            onSuccess();
+            onClose();
+          } catch (error) {
+            console.error(error);
+            Alert.alert("Lỗi", "Không thể xóa sự kiện.");
+          }
+        }
+      }
+    ]);
   };
 
   const showPicker = (type: "start" | "end", mode: "date" | "time") => {
@@ -71,7 +115,7 @@ export default function EventModal({ visible, onClose, onSuccess, initialDate }:
       <View className="flex-1 justify-end bg-black/50">
         <View className="bg-white rounded-t-3xl p-5">
           <View className="flex-row justify-between items-center mb-5">
-            <Text variant="h2">Thêm Sự kiện</Text>
+            <Text variant="h2">{eventToEdit ? "Cập nhật Sự kiện" : "Thêm Sự kiện"}</Text>
             <TouchableOpacity onPress={onClose}>
               <Text className="text-gray-500 font-bold text-lg">X</Text>
             </TouchableOpacity>
@@ -155,9 +199,20 @@ export default function EventModal({ visible, onClose, onSuccess, initialDate }:
             />
           )}
 
-          <Button onPress={handleSubmit} className="w-full mt-2" size="lg">
-            <Text className="text-white font-bold text-lg">Tạo mới</Text>
-          </Button>
+          {eventToEdit ? (
+            <View className="flex-row gap-2 mt-2">
+              <Button onPress={handleDelete} className="flex-1 bg-red-500" size="lg">
+                <Text className="text-white font-bold text-lg">Xóa</Text>
+              </Button>
+              <Button onPress={handleSubmit} className="flex-1" size="lg">
+                <Text className="text-white font-bold text-lg">Lưu</Text>
+              </Button>
+            </View>
+          ) : (
+            <Button onPress={handleSubmit} className="w-full mt-2" size="lg">
+              <Text className="text-white font-bold text-lg">Tạo mới</Text>
+            </Button>
+          )}
         </View>
       </View>
     </Modal>

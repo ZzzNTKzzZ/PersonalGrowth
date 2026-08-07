@@ -14,6 +14,7 @@ import { taskApi, Task as ApiTask } from "@/services/task.service";
 export default function Calendar(params: any) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedEventToEdit, setSelectedEventToEdit] = useState<any>(null);
   const [typeCalendar, setTypeCalendar] = useState<{
     name: "Ngày" | "Tuần" | "Tháng";
     value: "day" | "week" | "month";
@@ -62,6 +63,7 @@ export default function Calendar(params: any) {
       : new Date(start.getTime() + 60 * 60 * 1000); // 1 tiếng mặc định
 
     return {
+      id: t.id,
       title: t.name,
       start,
       end,
@@ -82,6 +84,7 @@ export default function Calendar(params: any) {
     return {
       date: dayStr,
       task: dayTasks.map((t) => ({
+        id: t.id,
         name: t.name,
         dueDate: t.startTime ? new Date(t.startTime).toLocaleString("vi-VN") : "",
       })),
@@ -97,6 +100,7 @@ export default function Calendar(params: any) {
       return endDate.getDate() !== startDate.getDate();
     })
     .map((t) => ({
+      id: t.id,
       name: t.name,
       category: t.category?.name || "Công việc",
       icon: (t.category?.color ? "briefcase-outline" : "calendar-outline") as any,
@@ -104,6 +108,11 @@ export default function Calendar(params: any) {
       startDate: new Date(t.startTime!),
       endDate: new Date(t.endTime!),
     }));
+
+  const handlePressEvent = (event: any) => {
+    setSelectedEventToEdit(event);
+    setIsModalVisible(true);
+  };
 
   return (
     <View className="flex-1 bg-background relative">
@@ -176,6 +185,7 @@ export default function Calendar(params: any) {
               date={selectedDate}
               onChangeDate={setSelectedDate}
               swipeEnabled={true}
+              onPressEvent={handlePressEvent}
             />
           </Card>
         )}
@@ -195,6 +205,7 @@ export default function Calendar(params: any) {
               onChangeDate={setSelectedDate}
               swipeEnabled={true}
               hideHeader={true}
+              onPressEvent={handlePressEvent}
             />
           </Card>
         )}
@@ -215,6 +226,7 @@ export default function Calendar(params: any) {
               date={selectedDate}
               onChangeDate={setSelectedDate}
               swipeEnabled={true}
+              onPressEvent={handlePressEvent}
               onSwitchToDayView={() => {
                 setTypeCalendar({ name: "Ngày", value: "day" });
               }}
@@ -225,7 +237,10 @@ export default function Calendar(params: any) {
       {/* Floating Action Button (FAB) thêm sự kiện / công việc mới */}
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={() => setIsModalVisible(true)}
+        onPress={() => {
+          setSelectedEventToEdit(null);
+          setIsModalVisible(true);
+        }}
         className="absolute bottom-6 right-6 w-14 h-14 rounded-full border-[#ffffff] border-2 bg-primary items-center justify-center shadow-lg  elevation-6 z-50"
       >
         <Ionicons name="add" size={30} color="#FFFFFF" />
@@ -236,6 +251,7 @@ export default function Calendar(params: any) {
         onClose={() => setIsModalVisible(false)} 
         onSuccess={() => fetchTasksFromApi()} 
         initialDate={selectedDate}
+        eventToEdit={selectedEventToEdit}
       />
     </View>
   );
