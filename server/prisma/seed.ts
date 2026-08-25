@@ -8,14 +8,29 @@ const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("🌱 Bắt đầu tạo toàn bộ dữ liệu mẫu từ calendar.tsx (Seeding data)...");
+  console.log("🌱 Bắt đầu tạo dữ liệu mẫu sạch sẽ (Seeding data)...");
 
-  // 1. Tạo hoặc lấy User khanh@gmail.com
+  // =========================================================================
+  // 1. XÓA SẠCH TOÀN BỘ DỮ LIỆU CŨ THEO THỨ TỰ RÀNG BUỘC KHÓA NGOẠI
+  // =========================================================================
+  console.log("🧹 Đang xóa sạch toàn bộ dữ liệu cũ trong cơ sở dữ liệu...");
+  await prisma.habitRecord.deleteMany({});
+  await prisma.habit.deleteMany({});
+  await prisma.task.deleteMany({});
+  await prisma.category.deleteMany({});
+  await prisma.journal.deleteMany({});
+  await prisma.dayReview.deleteMany({});
+  await prisma.mood.deleteMany({});
+  await prisma.profile.deleteMany({});
+  await prisma.user.deleteMany({});
+  console.log("✨ Đã xóa sạch toàn bộ dữ liệu cũ thành công!");
+
+  // =========================================================================
+  // 2. TẠO USER MẪU (khanh@gmail.com / password123)
+  // =========================================================================
   const hashedPassword = await bcrypt.hash("password123", 10);
-  const user = await prisma.user.upsert({
-    where: { email: "khanh@gmail.com" },
-    update: {},
-    create: {
+  const user = await prisma.user.create({
+    data: {
       email: "khanh@gmail.com",
       password: hashedPassword,
       profile: {
@@ -27,14 +42,11 @@ async function main() {
     },
   });
 
-  console.log(`👤 User: ${user.email} (ID: ${user.id})`);
+  console.log(`👤 Đã tạo User: ${user.email} (ID: ${user.id})`);
 
-  // Xóa bớt tasks cũ của user để seed sạch sẽ
-  await prisma.task.deleteMany({ where: { userId: user.id } });
-  await prisma.category.deleteMany({ where: { userId: user.id } });
-  await prisma.journal.deleteMany({ where: { userId: user.id } });
-
-  // 2. Tạo Categories mẫu
+  // =========================================================================
+  // 3. TẠO CÁC DANH MỤC (CATEGORIES)
+  // =========================================================================
   const categoriesData = [
     { name: "Công việc", color: "#3B82F6", icon: "briefcase-outline" },
     { name: "Học tập", color: "#8B5CF6", icon: "book-outline" },
@@ -267,9 +279,45 @@ async function main() {
     createdCount++;
   }
 
-  console.log(`📋 Đã Seed thành công ${createdCount} Công việc/Lịch trình đầy đủ từ calendar.tsx!`);
+  console.log(`📋 Đã Seed thành công ${createdCount} Công việc/Lịch trình (Tasks)!`);
 
-  // 5. Seed Danh sách Nhật ký (Journals)
+  // =========================================================================
+  // 5. SEED THÓI QUEN (HABITS) KÈM LỊCH SỬ CHECK-IN
+  // =========================================================================
+  const sampleHabits = [
+    { name: "Uống 2L nước mỗi ngày", frequency: "DAILY" as const, checkedToday: true },
+    { name: "Chạy bộ / Tập Gym 30 phút", frequency: "DAILY" as const, checkedToday: true },
+    { name: "Đọc 15 trang sách", frequency: "DAILY" as const, checkedToday: false },
+    { name: "Thiền 10 phút buổi sáng", frequency: "DAILY" as const, checkedToday: true },
+    { name: "Ngủ trước 23:00", frequency: "DAILY" as const, checkedToday: false },
+  ];
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  for (const h of sampleHabits) {
+    const createdHabit = await prisma.habit.create({
+      data: {
+        name: h.name,
+        frequency: h.frequency,
+        userId: user.id,
+      },
+    });
+
+    if (h.checkedToday) {
+      await prisma.habitRecord.create({
+        data: {
+          habitId: createdHabit.id,
+          completedAt: todayStart,
+        },
+      });
+    }
+  }
+  console.log(`✨ Đã Seed thành công ${sampleHabits.length} Thói quen (Habits)!`);
+
+  // =========================================================================
+  // 6. SEED NHẬT KÝ (JOURNALS)
+  // =========================================================================
   const sampleJournals = [
     {
       name: "Hoàn thành báo cáo Tuần",

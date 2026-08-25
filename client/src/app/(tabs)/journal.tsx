@@ -16,7 +16,7 @@ import { Journal, journalApi } from "@/services/journal.service";
 export default function JournalScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedJournalToEdit, setSelectedJournalToEdit] = useState<
-    Journal
+    Journal | null
   >();
   const [isLoadingApi, setIsLoadingApi] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);

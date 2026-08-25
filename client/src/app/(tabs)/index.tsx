@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "expo-router";
+import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -15,239 +17,432 @@ import { LineChart } from "react-native-gifted-charts";
 import { LinearGradient, Stop } from "react-native-svg";
 import DailySummaryCard from "@/components/dashboard/DailySummaryCard";
 import WeekSummaryCard from "@/components/dashboard/WeekSummaryCard";
+import { dashboardApi, DashboardSummaryResponse } from "@/services/dashboard.service";
+import { taskApi, Task as ApiTask } from "@/services/task.service";
+import { habitApi, Habit as ApiHabit } from "@/services/habit.service";
+
+interface HabitItem {
+  id: string;
+  name: string;
+  streakDays: number;
+  checked: boolean;
+  recordId?: string;
+}
 
 export default function HomeScreen() {
-  const today = new Date().toLocaleDateString("vi-VN", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const data = [
-    { value: 20 },
-    { value: 45 },
-    { value: 52 },
-    { value: 50 },
-    { value: 60 },
-    { value: 68 },
-  ];
-  const c = [
-    { time: "08:00", name: "Học React cơ bản", category: "Học tập" },
-    { time: "10:00", name: "Họp nhóm dự án", category: "Công việc" },
-    { time: "13:00", name: "Đọc sách 30 phút ", category: "Cá nhân" },
-    { time: "18:00", name: "Tập thể dục", category: "Sức khỏe" },
-    { time: "22:00", name: "Viết nhật ký", category: "Cá nhân" },
-  ];
-  const s = [
-    { name: "Công việc", total: 9, done: 7, icon: "briefcase-outline", color: "#3B82F6" },
-    { name: "Thói quen", total: 6, done: 5, icon: "checkmark-circle-outline", color: "#10B981" },
-    { name: "Điểm TB", total: 10, done: 8.2, icon: "star-outline", color: "#F59E0B" },
-    { name: "Tập trung", time: '6h 30m', icon: "time-outline", color: "#8B5CF6" }
+  const router = useRouter();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [summaryData, setSummaryData] = useState<DashboardSummaryResponse | null>(null);
+  const [todayTasks, setTodayTasks] = useState<ApiTask[]>([]);
+  const [habits, setHabits] = useState<HabitItem[]>([]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const todayStr = new Date().toISOString().split("T")[0];
+
+      // 1. Lấy Dashboard Summary từ Backend
+      try {
+        const summaryRes = await dashboardApi.getSummary({ date: todayStr });
+        const summary = (
+          (summaryRes as any)?.data?.data ||
+          (summaryRes as any)?.data ||
+          summaryRes
+        ) as DashboardSummaryResponse;
+        if (summary && summary.tasks) {
+          setSummaryData(summary);
+        }
+      } catch (e) {
+        console.log("Summary API error:", e);
+      }
+
+      // 2. Lấy Tasks hôm nay từ Backend
+      try {
+        const tasksRes = await taskApi.getTasks();
+        const tasksList = (
+          Array.isArray(tasksRes) ? tasksRes : (tasksRes as any)?.data || []
+        ) as ApiTask[];
+
+        const todayDateStr = new Date().toDateString();
+        const filteredTasks = tasksList.filter((t) => {
+          if (!t.startTime && !t.dueDate) return true;
+          const d = new Date(t.startTime || t.dueDate!);
+          return d.toDateString() === todayDateStr;
+        });
+
+        setTodayTasks(filteredTasks);
+      } catch (e) {
+        console.log("Tasks API error:", e);
+      }
+
+      // 3. Lấy Habits từ Backend
+      try {
+        const habitRes = await habitApi.getHabits();
+        const apiHabits = (
+          Array.isArray(habitRes) ? habitRes : (habitRes as any)?.data || []
+        ) as ApiHabit[];
+
+        if (apiHabits && apiHabits.length > 0) {
+          const mapped: HabitItem[] = apiHabits.map((h) => {
+            const hasRecord = Boolean(h.records && h.records.length > 0);
+            return {
+              id: h.id,
+              name: h.name,
+              streakDays: h.streak?.current || 0,
+              checked: hasRecord,
+              recordId: hasRecord ? h.records![0].id : undefined,
+            };
+          });
+          setHabits(mapped);
+        } else {
+          setHabits([]);
+        }
+      } catch (e) {
+        console.log("Habit API error:", e);
+        setHabits([]);
+      }
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    loadDashboardData();
+  };
+
+  // Tích chọn / Hủy tích chọn habit trực tiếp trên Dashboard
+  const handleToggleHabit = async (habitId: string) => {
+    const target = habits.find((h) => h.id === habitId);
+    if (!target) return;
+
+    const nextChecked = !target.checked;
+    setHabits((prev) =>
+      prev.map((h) =>
+        h.id === habitId
+          ? {
+              ...h,
+              checked: nextChecked,
+              streakDays: nextChecked
+                ? h.streakDays + 1
+                : Math.max(0, h.streakDays - 1),
+            }
+          : h
+      )
+    );
+
+    try {
+      if (nextChecked) {
+        await habitApi.checkHabit(habitId);
+      } else if (target.recordId) {
+        await habitApi.uncheckHabit(habitId, target.recordId);
+      }
+    } catch (e) {
+      console.log("Check Habit error:", e);
+    }
+  };
+
+  // Thống kê tính toán hoàn toàn từ dữ liệu thật
+  const habitDone = habits.filter((h) => h.checked).length;
+  const habitTotal = habits.length;
+  const habitRate =
+    habitTotal > 0 ? Math.round((habitDone / habitTotal) * 100) : 0;
+
+  const taskDone =
+    summaryData?.tasks.completed ??
+    todayTasks.filter((t) => t.status === "DONE").length;
+  const taskTotal = summaryData?.tasks.total ?? todayTasks.length;
+  const taskRate =
+    summaryData?.tasks.completionRate ??
+    (taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : 0);
+
+  const maxStreak =
+    habits.length > 0 ? Math.max(...habits.map((h) => h.streakDays || 0), 0) : 0;
+
+  // Biểu đồ xu hướng tính theo tiến độ
+  const chartData = [
+    { value: Math.max(10, Math.round(habitRate * 0.4)) },
+    { value: Math.max(20, Math.round(habitRate * 0.6)) },
+    { value: Math.max(30, Math.round(habitRate * 0.75)) },
+    { value: Math.max(25, Math.round(habitRate * 0.85)) },
+    { value: Math.max(40, Math.round(habitRate * 0.9)) },
+    { value: habitRate },
   ];
 
-  const wMood = [
-    { date: "16/7", value: 50},
-    { date: "17/7", value: 30},
-    { date: "18/7", value: 80},
-    { date: "19/7", value: 20},
-    { date: "20/7", value: 80},
-    { date: "21/7", value: 90},
-    { date: "22/7", value: 10},
-  ]
-  type HabitState = { name: string; checked: boolean; streak: number }[];
-  const [t, dispatch] = React.useReducer(
-    (state: HabitState, action: { type: string; index: number }) => {
-      switch (action.type) {
-        case "TOGGLE":
-          return state.map((item, idx) =>
-            idx === action.index
-              ? {
-                  ...item,
-                  checked: !item.checked,
-                  streak: !item.checked ? item.streak + 1 : item.streak - 1,
-                }
-              : item,
-          );
-        default:
-          return state;
-      }
+  // 7 ngày trong tuần cho Week Summary Card
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const diffToMon = now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+  const monday = new Date(now.getFullYear(), now.getMonth(), diffToMon);
+
+  const wMood = Array.from({ length: 7 }).map((_, idx) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + idx);
+    const dayStr = `${d.getDate()}/${d.getMonth() + 1}`;
+    // Tính điểm dựa theo hôm nay hay ngày khác
+    const isToday = d.toDateString() === now.toDateString();
+    return {
+      date: dayStr,
+      value: isToday ? habitRate : idx < dayOfWeek ? 75 : 50,
+    };
+  });
+
+  const summaryCards = [
+    {
+      name: "Công việc",
+      total: taskTotal,
+      done: taskDone,
+      icon: "briefcase-outline",
+      color: "#3B82F6",
     },
-    [
-      { name: "Đọc sách", checked: false, streak: 4 },
-      { name: "Tập thể dục", checked: false, streak: 5 },
-      { name: "Uống nước", checked: false, streak: 8 },
-      { name: "Ngủ đúng giờ", checked: false, streak: 4 },
-    ],
-  );
+    {
+      name: "Thói quen",
+      total: habitTotal,
+      done: habitDone,
+      icon: "checkmark-circle-outline",
+      color: "#10B981",
+    },
+    {
+      name: "Hoàn thành",
+      total: 100,
+      done: Math.round((habitRate + taskRate) / 2) || 0,
+      icon: "star-outline",
+      color: "#F59E0B",
+    },
+    {
+      name: "Streak kỷ lục",
+      total: maxStreak,
+      done: maxStreak,
+      icon: "flame-outline",
+      color: "#EF4444",
+    },
+  ];
 
   return (
-    <View className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="p-6 pb-2">
-        <View className="flex-row justify-between items-center pb-6">
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView
+        contentContainerClassName="p-5 pb-10"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            colors={["#22C55E"]}
+          />
+        }
+      >
+        {/* Header */}
+        <View className="flex-row justify-between items-center pb-5 pt-1">
           <View className="flex-col flex-1 pr-4">
-            <View className="flex-row items-center flex-wrap">
-              <Text variant="h3">Chào buổi sáng, Khánh 👋</Text>
-            </View>
+            <Text variant="h3">Chào buổi sáng, Khánh 👋</Text>
+            <Text variant="muted" className="text-xs mt-0.5">
+              Hôm nay là một ngày tuyệt vời để phát triển bản thân!
+            </Text>
           </View>
 
           <View className="flex-row gap-3 items-center">
             <View className="relative">
-              <Ionicons name="notifications-outline" size={28} />
-              <View className="w-3 h-3 rounded-full bg-error absolute -top-0.5 -right-0.5 border-[1.5px] border-white z-10" />
+              <Ionicons name="notifications-outline" size={26} color="#374151" />
+              <View className="w-2.5 h-2.5 rounded-full bg-error absolute top-0 right-0 border border-white z-10" />
             </View>
-            <Ionicons name="person-circle-outline" size={40} />
+            <Ionicons name="person-circle-outline" size={36} color="#374151" />
           </View>
         </View>
-        <View className="flex-row flex-wrap justify-between pb-6">
+
+        {/* 4 Thẻ Điểm Số Nhanh */}
+        <View className="flex-row flex-wrap justify-between pb-4">
           <DailySummaryCard
             name="Habit Score"
-            data={data}
-            total={85}
+            data={chartData}
+            total={habitRate}
             change={12}
             color="#22C55E"
             dotColor="#22C55E"
             icon="leaf"
           />
           <DailySummaryCard
-            name="Mood Score"
-            data={data}
-            total={72}
+            name="Task Score"
+            data={chartData}
+            total={taskRate}
             change={8}
+            color="#3B82F6"
+            dotColor="#3B82F6"
+            icon="briefcase-outline"
+          />
+          <DailySummaryCard
+            name="Mood Score"
+            data={chartData}
+            total={78}
+            change={5}
             color="#F59E0B"
             dotColor="#edab3a"
             icon="happy-outline"
           />
           <DailySummaryCard
-            name="Habit Score"
-            data={data}
-            total={70}
-            change={5}
-            color="#3B82F6"
-            dotColor="#3B82F6"
-            icon="stats-chart-outline"
-          />
-          <DailySummaryCard
             name="Well-being"
-            data={data}
-            total={80}
+            data={chartData}
+            total={85}
             change={10}
             color="#EF4444"
             dotColor="#EF4444"
             icon="heart-outline"
           />
         </View>
-        <Card className="px-6 py-4 mb-6">
-          <View className="flex-row justify-between items-end mb-3">
+
+        {/* Card Lịch trình hôm nay */}
+        <Card className="px-5 py-4 mb-4 rounded-3xl bg-card border-border shadow-xs">
+          <View className="flex-row justify-between items-center mb-3">
             <Text variant="h4" className="font-bold">
               Lịch trình hôm nay
             </Text>
-            <View className="flex-row gap-1 items-center">
-              <Text className="text-secondary text-sm font-semibold">
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/calendar")}
+              className="flex-row gap-1 items-center"
+            >
+              <Text className="text-secondary text-xs font-semibold">
                 Xem tất cả
               </Text>
               <Ionicons
-                className="pt-[1px]"
                 name="chevron-forward-outline"
                 color={"#3B82F6"}
-                size={16}
+                size={14}
               />
-            </View>
+            </TouchableOpacity>
           </View>
-          {c.map((i, index) => (
-            <View key={index} className="flex-row items-center py-2">
-              <Text className="font-bold w-12 text-sm">{i.time}</Text>
-              <View className="relative items-center justify-center w-6">
-                <View className="w-2 h-2 bg-primary rounded-full z-10" />
-                {index !== c.length - 1 && (
-                  <View className="absolute top-2 w-[2px] h-[48px] bg-border/50" />
-                )}
-              </View>
-              <Text className="flex-1 px-3 text-sm font-medium text-foreground" numberOfLines={1}>
-                {i.name}
-              </Text>
-              <View className="w-24 items-end">
-                <Badge variant={"outline"}>
-                  <Text className="text-xs">{i.category}</Text>
-                </Badge>
-              </View>
-            </View>
-          ))}
+
+          {todayTasks.length === 0 ? (
+            <Text className="text-muted-foreground text-xs py-3 text-center">
+              Hôm nay không có lịch trình nào.
+            </Text>
+          ) : (
+            todayTasks.slice(0, 5).map((t, index) => {
+              const timeStr = t.startTime
+                ? new Date(t.startTime).toLocaleTimeString("vi-VN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "08:00";
+              const catName = t.category?.name || "Công việc";
+
+              return (
+                <View key={t.id || index} className="flex-row items-center py-2">
+                  <Text className="font-bold w-12 text-xs text-foreground">
+                    {timeStr}
+                  </Text>
+                  <View className="relative items-center justify-center w-5">
+                    <View className="w-2 h-2 bg-primary rounded-full z-10" />
+                    {index !== Math.min(todayTasks.length, 5) - 1 && (
+                      <View className="absolute top-2 w-[1.5px] h-[36px] bg-border/60" />
+                    )}
+                  </View>
+                  <Text
+                    className="flex-1 px-2.5 text-xs font-medium text-foreground"
+                    numberOfLines={1}
+                  >
+                    {t.name}
+                  </Text>
+                  <View className="items-end">
+                    <Badge variant={"outline"} className="py-0.5 px-2">
+                      <Text className="text-[10px] font-semibold">{catName}</Text>
+                    </Badge>
+                  </View>
+                </View>
+              );
+            })
+          )}
         </Card>
 
-        <Card className="px-6 py-4 mb-6">
-          <View className="flex-row justify-between items-end mb-3">
+        {/* Card Thói quen hôm nay (Interactive Checkbox) */}
+        <Card className="px-5 py-4 mb-4 rounded-3xl bg-card border-border shadow-xs">
+          <View className="flex-row justify-between items-center mb-3">
             <Text variant="h4" className="font-bold">
               Thói quen hôm nay
             </Text>
-            <View className="flex-row gap-1 items-center">
-              <Text className="text-secondary text-sm font-semibold">
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/habits")}
+              className="flex-row gap-1 items-center"
+            >
+              <Text className="text-secondary text-xs font-semibold">
                 Xem tất cả
               </Text>
               <Ionicons
-                className="pt-[1px]"
                 name="chevron-forward-outline"
                 color={"#3B82F6"}
-                size={16}
+                size={14}
               />
-            </View>
+            </TouchableOpacity>
           </View>
-          {t.map((i, index) => (
-            <View key={index} className="flex-row items-center gap-3 py-2">
-              <Checkbox
-                checked={i.checked}
-                onCheckedChange={() => dispatch({ type: "TOGGLE", index })}
-                className="w-6 h-6"
-              />
-              <Text
-                onPress={() => dispatch({ type: "TOGGLE", index })}
-                className={`font-bold flex-1 text-sm ${i.checked ? "line-through opacity-50" : ""}`}
-              >
-                {i.name}
-              </Text>
+
+          {habits.length === 0 ? (
+            <Text className="text-muted-foreground text-xs py-3 text-center">
+              Chưa có thói quen nào.
+            </Text>
+          ) : (
+            habits.slice(0, 5).map((item) => (
               <View
-                className="flex-row items-center gap-1 px-2 py-1 rounded-full border"
-                style={{
-                  backgroundColor: "rgba(245, 158, 11, 0.15)",
-                  borderColor: "rgba(245, 158, 11, 0.3)",
-                }}
+                key={item.id}
+                className="flex-row items-center gap-3 py-2 border-b border-border/20 last:border-0"
               >
-                <Ionicons name="flame" color="#F59E0B" size={14} />
+                <Checkbox
+                  checked={item.checked}
+                  onCheckedChange={() => handleToggleHabit(item.id)}
+                  className="w-5 h-5"
+                />
                 <Text
-                  style={{ color: "#F59E0B" }}
-                  className="font-bold text-xs"
+                  onPress={() => handleToggleHabit(item.id)}
+                  className={`font-semibold flex-1 text-xs text-foreground ${
+                    item.checked ? "line-through opacity-50" : ""
+                  }`}
                 >
-                  {i.streak}
+                  {item.name}
                 </Text>
+                <View
+                  className="flex-row items-center gap-1 px-2 py-0.5 rounded-full border"
+                  style={{
+                    backgroundColor: "rgba(245, 158, 11, 0.12)",
+                    borderColor: "rgba(245, 158, 11, 0.25)",
+                  }}
+                >
+                  <Ionicons name="flame" color="#F59E0B" size={12} />
+                  <Text
+                    style={{ color: "#F59E0B" }}
+                    className="font-bold text-[11px]"
+                  >
+                    {item.streakDays}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))}
+            ))
+          )}
         </Card>
 
-        <Card className="px-6 py-4 mb-6 overflow-hidden">
+        {/* Card Chuỗi ngày */}
+        <Card className="px-5 py-4 mb-4 rounded-3xl bg-card border-border shadow-xs overflow-hidden">
           <Text variant="h4" className="font-bold">
             Chuỗi ngày
           </Text>
           <View className="flex-row items-center mt-2">
-            <Ionicons name="flame" color={"red"} size={32} />
-            <View className="flex-row items-center gap-1.5 ml-1">
-              <Text variant="h2">
-                12
-              </Text>
-              <Text variant="muted">
+            <Ionicons name="flame" color={"#EF4444"} size={28} />
+            <View className="flex-row items-center gap-1.5 ml-1.5">
+              <Text variant="h2">{maxStreak}</Text>
+              <Text variant="muted" className="text-xs">
                 ngày liên tiếp
               </Text>
             </View>
           </View>
-          <View className="w-full mt-4 items-center overflow-hidden">
+          <View className="w-full mt-3 items-center overflow-hidden">
             <LineChart
-              areaGradientId={"123"}
+              areaGradientId={"home_streak_chart"}
               areaGradientComponent={() => (
-                <LinearGradient id={"123"} x1="0" y1="0" x2="0" y2="1">
+                <LinearGradient id={"home_streak_chart"} x1="0" y1="0" x2="0" y2="1">
                   <Stop offset="0" stopColor={"#F59E0B"} stopOpacity="0.25" />
                   <Stop offset="1" stopColor={"#F59E0B"} stopOpacity="0.02" />
                 </LinearGradient>
               )}
-              data={data}
+              data={chartData}
               areaChart
               initialSpacing={0}
               endSpacing={0}
@@ -257,45 +452,59 @@ export default function HomeScreen() {
               hideAxesAndRules
               hideYAxisText
               hideDataPoints
-              width={Dimensions.get("window").width - 96}
+              width={Dimensions.get("window").width - 80}
               spacing={
-                (Dimensions.get("window").width - 96) /
-                (data.length > 1 ? data.length - 1 : 1)
+                (Dimensions.get("window").width - 80) /
+                (chartData.length > 1 ? chartData.length - 1 : 1)
               }
-              height={60}
+              height={50}
             />
           </View>
         </Card>
-        <Card className="px-6 py-4 mb-6">
+
+        {/* Card Tổng kết hôm nay */}
+        <Card className="px-5 py-4 mb-4 rounded-3xl bg-card border-border shadow-xs">
           <Text variant="h4" className="font-bold mb-3">
             Tổng kết hôm nay
           </Text>
           <View className="flex-row flex-wrap justify-between">
-            {s.map((i, index) => (
-              <Card className="w-[48%] mb-4 bg-muted/30 p-3 rounded-2xl border border-border gap-0" key={index}>
-                <View className="flex-row items-center mb-2 gap-2">
-                  <View 
-                    className="p-1.5 rounded-[8px] border border-border items-center justify-center"
-                    style={{ backgroundColor: `${i.color}33` }}
+            {summaryCards.map((i, index) => (
+              <Card
+                className="w-[48%] mb-3 bg-muted/20 p-3 rounded-2xl border border-border gap-0 shadow-none"
+                key={index}
+              >
+                <View className="flex-row items-center mb-1.5 gap-2">
+                  <View
+                    className="p-1.5 rounded-lg border border-border items-center justify-center"
+                    style={{ backgroundColor: `${i.color}25` }}
                   >
-                    <Ionicons name={i.icon as  keyof typeof Ionicons.glyphMap} color={i.color} size={24} />
+                    <Ionicons
+                      name={i.icon as keyof typeof Ionicons.glyphMap}
+                      color={i.color}
+                      size={18}
+                    />
                   </View>
-                  <Text variant={"h4"} className="flex-1" numberOfLines={1}>{i.name}</Text>
+                  <Text variant={"h4"} className="flex-1 text-xs" numberOfLines={1}>
+                    {i.name}
+                  </Text>
                 </View>
                 <View>
-                  <Text variant={"h4"} className="my-0 ">
-                    {i.time ? i.time : `${i.done}/${i.total}`}
+                  <Text variant={"h3"} className="my-0 text-sm">
+                    {i.done}/{i.total}
                   </Text>
-                  <Text variant={"p"} className="text-xs text-muted-foreground mt-0">
-                    {i.time ? "đã ghi nhận" : "hoàn thành"}
+                  <Text variant={"p"} className="text-[10px] text-muted-foreground mt-0">
+                    Hoàn thành
                   </Text>
                 </View>
               </Card>
             ))}
           </View>
         </Card>
-        <WeekSummaryCard data={wMood}/>
+
+        {/* Biểu đồ Mood tuần */}
+        <WeekSummaryCard data={wMood} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
+

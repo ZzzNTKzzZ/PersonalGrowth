@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
@@ -89,9 +90,12 @@ export default function HabitsScreen() {
     "Hôm nay" | "Lịch" | "Thống kê" | "AI Coach" | "Thử thách"
   >("Hôm nay");
 
-  // Ngày đang được chọn trên lịch
-  const [selectedDate, setSelectedDate] = useState("2026-07-23");
+  // Ngày đang được chọn trên lịch (mặc định là hôm nay)
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [isLoadingApi, setIsLoadingApi] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Mảng danh sách thói quen
   const [habits, setHabits] = useState<HabitItem[]>([]);
@@ -111,33 +115,78 @@ export default function HabitsScreen() {
     try {
       setIsLoadingApi(true);
       const res = await habitApi.getHabits();
-      const apiHabits = (Array.isArray(res) ? res : (res as any)?.data || []) as Habit[];
-      
-      if (apiHabits && apiHabits.length > 0) {
-        const mapped: HabitItem[] = apiHabits.map((h, idx) => {
+      let rawHabits: Habit[] = [];
+      if (Array.isArray(res)) {
+        rawHabits = res;
+      } else if (Array.isArray((res as any)?.data)) {
+        rawHabits = (res as any).data;
+      } else if (Array.isArray((res as any)?.data?.data)) {
+        rawHabits = (res as any).data.data;
+      }
+
+      // Khử trùng lặp (Deduplicate) theo ID
+      const uniqueMap = new Map<string, Habit>();
+      for (const h of rawHabits) {
+        if (h && h.id) {
+          uniqueMap.set(h.id, h);
+        }
+      }
+      const uniqueHabits = Array.from(uniqueMap.values());
+
+      if (uniqueHabits.length > 0) {
+        const mapped: HabitItem[] = uniqueHabits.map((h, idx) => {
           const hasRecordToday = Boolean(h.records && h.records.length > 0);
           return {
             id: h.id,
             name: h.name,
             rule: h.frequency === "DAILY" ? "Hàng ngày" : "Hàng tuần",
             detail: "08:00",
-            icon: (["fitness-outline", "book-outline", "leaf-outline", "water-outline", "moon-outline"][idx % 5]) as any,
-            color: ["#22C55E", "#8B5CF6", "#14B8A6", "#3B82F6", "#F59E0B"][idx % 5],
-            bgColor: ["bg-emerald-500/15", "bg-purple-500/15", "bg-teal-500/15", "bg-blue-500/15", "bg-amber-500/15"][idx % 5],
-            streakDays: h.streak?.current || 1,
-            maxStreakDays: h.streak?.max || h.streak?.current || 1,
+            icon: (
+              [
+                "fitness-outline",
+                "book-outline",
+                "leaf-outline",
+                "water-outline",
+                "moon-outline",
+              ][idx % 5]
+            ) as any,
+            color: [
+              "#22C55E",
+              "#8B5CF6",
+              "#14B8A6",
+              "#3B82F6",
+              "#F59E0B",
+            ][idx % 5],
+            bgColor: [
+              "bg-emerald-500/15",
+              "bg-purple-500/15",
+              "bg-teal-500/15",
+              "bg-blue-500/15",
+              "bg-amber-500/15",
+            ][idx % 5],
+            streakDays: h.streak?.current || 0,
+            maxStreakDays: h.streak?.max || h.streak?.current || 0,
             progress: hasRecordToday ? 100 : 0,
             checked: hasRecordToday,
             recordId: hasRecordToday ? h.records![0].id : undefined,
           };
         });
         setHabits(mapped);
+      } else {
+        setHabits([]);
       }
     } catch (error) {
-      console.log("Dùng danh sách habit mẫu local (Backend chưa bật hoặc chưa Auth)");
+      console.log("Lỗi khi tải danh sách habit:", error);
+      setHabits([]);
     } finally {
       setIsLoadingApi(false);
+      setIsRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    fetchHabitsFromApi();
   };
 
   // Xử lý Tích chọn / Hủy tích chọn hoàn thành (Checkbox toggle)
@@ -155,6 +204,9 @@ export default function HabitsScreen() {
             ...item,
             checked: nextChecked,
             progress: nextChecked ? 100 : 0,
+            streakDays: nextChecked
+              ? item.streakDays + 1
+              : Math.max(0, item.streakDays - 1),
           };
         }
         return item;
@@ -169,50 +221,37 @@ export default function HabitsScreen() {
         await habitApi.uncheckHabit(id, target.recordId);
       }
     } catch (err) {
-      console.log("Tích chọn Habit trên local UI");
+      console.log("Lỗi khi tích chọn habit");
     }
   };
 
-  // Tính toán thống kê
   const completedCount = habits.filter((h) => h.checked).length;
   const totalCount = habits.length;
   const overallPercentage =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const currentStreakDays = Math.max(
-    ...habits.map((h) => h.streakDays || 0),
-    12
-  );
-  const bestStreakDays = Math.max(
-    ...habits.map((h) => h.maxStreakDays || h.streakDays || 0),
-    72
-  );
+  const currentStreakDays =
+    habits.length > 0 ? Math.max(...habits.map((h) => h.streakDays || 0), 0) : 0;
+  const bestStreakDays =
+    habits.length > 0
+      ? Math.max(
+          ...habits.map((h) => h.maxStreakDays || h.streakDays || 0),
+          0
+        )
+      : 0;
 
   // Xử lý thêm habit mới
   const handleAddHabit = async () => {
     if (!newHabitName.trim()) return;
     
-    // Gọi API Backend nếu có kết nối
     try {
       await habitApi.createHabit({
         name: newHabitName.trim(),
         frequency: "DAILY",
       });
-      fetchHabitsFromApi();
+      await fetchHabitsFromApi();
     } catch (err) {
-      const newItem: HabitItem = {
-        id: Date.now().toString(),
-        name: newHabitName.trim(),
-        rule: newHabitRule.trim() || "Thói quen hàng ngày",
-        detail: newHabitDetail.trim() || "08:00",
-        icon: "sparkles-outline",
-        color: "#22C55E",
-        bgColor: "bg-emerald-500/15",
-        streakDays: 1,
-        progress: 0,
-        checked: false,
-      };
-      setHabits((prev) => [...prev, newItem]);
+      console.log("Lỗi khi tạo habit:", err);
     }
 
     setNewHabitName("");
@@ -226,6 +265,13 @@ export default function HabitsScreen() {
       <ScrollView
         contentContainerClassName="p-5 pb-4"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            colors={["#22C55E"]}
+          />
+        }
       >
         {/* ==================== 1. HEADER (Bỏ nút Setting) ==================== */}
         <View className="mb-4 pt-2">
@@ -454,46 +500,16 @@ export default function HabitsScreen() {
             <Calendar
               onDayPress={(day: any) => setSelectedDate(day.dateString)}
               markedDates={(() => {
-                const baseDates: Record<string, any> = {
-                  "2026-07-20": {
-                    streak: true,
-                    dots: [
-                      { color: "#22C55E" },
-                      { color: "#8B5CF6" },
-                      { color: "#3B82F6" },
-                    ],
-                  },
-                  "2026-07-21": {
-                    streak: true,
-                    dots: [{ color: "#22C55E" }, { color: "#14B8A6" }],
-                  },
-                  "2026-07-22": {
-                    streak: true,
-                    dots: [
-                      { color: "#22C55E" },
-                      { color: "#8B5CF6" },
-                      { color: "#3B82F6" },
-                      { color: "#F59E0B" },
-                    ],
-                  },
-                  "2026-07-23": {
-                    streak: true,
-                    dots: [{ color: "#22C55E" }, { color: "#3B82F6" }],
-                  },
-                  "2026-07-24": {
-                    dots: [{ color: "#8B5CF6" }, { color: "#14B8A6" }],
-                  },
-                  "2026-07-25": {
-                    dots: [{ color: "#22C55E" }, { color: "#3B82F6" }],
-                  },
-                  "2026-07-27": {
-                    dots: [
-                      { color: "#22C55E" },
-                      { color: "#8B5CF6" },
-                      { color: "#3B82F6" },
-                    ],
-                  },
-                };
+                const todayStr = new Date().toISOString().split("T")[0];
+                const baseDates: Record<string, any> = {};
+
+                // Đánh dấu các chấm màu habit cho hôm nay nếu có hoàn thành
+                const completedHabits = habits.filter((h) => h.checked);
+                if (completedHabits.length > 0) {
+                  baseDates[todayStr] = {
+                    dots: completedHabits.map((h) => ({ color: h.color })),
+                  };
+                }
 
                 if (selectedDate) {
                   const existing = baseDates[selectedDate] || {};
