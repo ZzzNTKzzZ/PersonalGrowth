@@ -61,3 +61,4 @@ export const habitApi = {
   uncheckHabit: (id: string, recordId: string) =>
     api.delete<{ message: string }>(`/habits/${id}/records/${recordId}`),
 };
+

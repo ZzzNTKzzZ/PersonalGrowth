@@ -1,13 +1,8 @@
 import { Platform } from "react-native";
 
-// Địa chỉ IP mặc định tương thích theo nền tảng
-// - Android Emulator: 10.0.2.2
-// - iOS / Web: localhost
 const getBaseUrl = () => {
   if (Platform.OS === "android") {
-    // return "http://192.168.1.5:3000";
-    // //10.100.97.171:
-    return "http://10.100.97.171:3000";
+    return process.env.EXPO_PUBLIC_API_URL;
 
   }
   return "http://localhost:3000";

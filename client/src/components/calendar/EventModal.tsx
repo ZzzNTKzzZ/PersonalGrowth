@@ -4,6 +4,8 @@ import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { taskApi } from "@/services/task.service";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Icon } from "../ui/icon";
+import {  X } from "lucide-react-native";
 
 interface EventModalProps {
   visible: boolean;
@@ -116,8 +118,8 @@ export default function EventModal({ visible, onClose, onSuccess, initialDate, e
         <View className="bg-white rounded-t-3xl p-5">
           <View className="flex-row justify-between items-center mb-5">
             <Text variant="h2">{eventToEdit ? "Cập nhật Sự kiện" : "Thêm Sự kiện"}</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Text className="text-gray-500 font-bold text-lg">X</Text>
+            <TouchableOpacity onPress={onClose} className="items-center">
+              <Icon as={X} size={24}/>
             </TouchableOpacity>
           </View>
 

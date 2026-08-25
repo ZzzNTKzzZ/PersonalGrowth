@@ -1,9 +1,13 @@
-import React from 'react';
-import { View, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import JournalCard from '@/components/journal/card';
+import { Ionicons } from '@expo/vector-icons';
+import JournalModal from '@/components/journal/JournalModal';
 
 export default function JournalScreen() {
+  const [isModalVisible, setIsModalVisible] = useState(false)
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerClassName="p-6 pb-20" showsVerticalScrollIndicator={false}>
@@ -37,6 +41,23 @@ export default function JournalScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Floating Action Button (FAB) thêm nhật ký mới */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => {
+          setIsModalVisible(true);
+        }}
+        className="absolute bottom-6 right-6 w-14 h-14 rounded-full border-[#ffffff] border-2 bg-primary items-center justify-center shadow-lg elevation-6 z-50"
+      >
+        <Ionicons name="add" size={30} color="#FFFFFF" />
+      </TouchableOpacity>
+
+      <JournalModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onSuccess={() => {}}
+      />
     </SafeAreaView>
   );
 }
