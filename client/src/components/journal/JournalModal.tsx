@@ -6,6 +6,7 @@ import { Icon } from "../ui/icon";
 import { X } from "lucide-react-native";
 import { SegmentedControl } from "../ui/segmented-control";
 import { journalApi } from "@/services/journal.service";
+import { MOOD } from "@/types/type";
 
 interface JournalModalProps {
   visible: boolean;
@@ -14,12 +15,12 @@ interface JournalModalProps {
   journalToEdit?: any;
 }
 
-const MOOD_MAP: Record<string, { name: string; value: string }> = {
-  "Rất vui": { name: "Rất vui", value: "VERY_HAPPY" },
-  "Vui": { name: "Vui", value: "HAPPY" },
-  "Bình thường": { name: "Bình thường", value: "NORMAL" },
-  "Buồn": { name: "Buồn", value: "SAD" },
-  "Rất buồn": { name: "Rất buồn", value: "VERY_SAD" },
+const MOOD_MAP: Record<string, { name: string; value: MOOD }> = {
+  "Rất vui": { name: "Rất vui", value: "Very Happy" },
+  "Vui": { name: "Vui", value: "Happy" },
+  "Bình thường": { name: "Bình thường", value: "Normal" },
+  "Buồn": { name: "Buồn", value: "Sad" },
+  "Rất buồn": { name: "Rất buồn", value: "Very Sad" },
 };
 
 const VALUE_TO_NAME: Record<string, string> = {
@@ -78,15 +79,15 @@ export default function JournalModal({
       setIsSubmitting(true);
       if (journalToEdit?.id) {
         await journalApi.updateJournal(journalToEdit.id, {
-          name: name.trim() || undefined,
+          name: name.trim(),
           content: content.trim(),
-          mood: selectedMood.value,
+          mood: selectedMood.value as MOOD,
         });
       } else {
         await journalApi.createJournal({
-          name: name.trim() || undefined,
+          name: name.trim(),
           content: content.trim(),
-          mood: selectedMood.value,
+          mood: selectedMood.value as MOOD,
         });
       }
       onSuccess();

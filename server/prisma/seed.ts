@@ -32,6 +32,7 @@ async function main() {
   // Xóa bớt tasks cũ của user để seed sạch sẽ
   await prisma.task.deleteMany({ where: { userId: user.id } });
   await prisma.category.deleteMany({ where: { userId: user.id } });
+  await prisma.journal.deleteMany({ where: { userId: user.id } });
 
   // 2. Tạo Categories mẫu
   const categoriesData = [
@@ -267,6 +268,53 @@ async function main() {
   }
 
   console.log(`📋 Đã Seed thành công ${createdCount} Công việc/Lịch trình đầy đủ từ calendar.tsx!`);
+
+  // 5. Seed Danh sách Nhật ký (Journals)
+  const sampleJournals = [
+    {
+      name: "Hoàn thành báo cáo Tuần",
+      content:
+        "Hôm nay tôi rất vui vì đã giải quyết xong núi công việc chất đống từ đầu tuần. Cảm giác thật nhẹ nhõm và tự hào về bản thân!",
+      createdAt: new Date(),
+    },
+    {
+      name: "Cà phê sáng Chủ Nhật",
+      content:
+        "Một buổi sáng yên bình với ly Latte yêu thích tại quán quen. Đọc nốt cuốn sách còn dang dở và chuẩn bị kế hoạch cho tuần mới.",
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    },
+    {
+      name: "Buổi tập đầu tiên",
+      content:
+        "Vượt qua sự lười biếng để đến phòng gym. Tuy cơ bắp hơi đau nhức nhưng tinh thần lại cực kỳ sảng khoái.",
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    },
+    {
+      name: "Ý tưởng phát triển ứng dụng mới",
+      content:
+        "Đã phác thảo xong sơ đồ luồng tính năng theo dõi chỉ số cá nhân. Cảm giác rất hào hứng để bắt tay vào code!",
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    },
+    {
+      name: "Gặp gỡ bạn bè cũ",
+      content:
+        "Một buổi tối trò chuyện rôm rả, ôn lại kỷ niệm thời đại học và chia sẻ về những dự định tương lai.",
+      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+    },
+  ];
+
+  for (const j of sampleJournals) {
+    await prisma.journal.create({
+      data: {
+        name: j.name,
+        content: j.content,
+        createdAt: j.createdAt,
+        userId: user.id,
+      },
+    });
+  }
+
+  console.log(`📖 Đã Seed thành công ${sampleJournals.length} bài Nhật ký (Journals)!`);
   console.log("🎉 Hoàn tất Seed Dữ liệu thành công!");
 }
 

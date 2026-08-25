@@ -63,7 +63,7 @@ export function SegmentedControl({
             >
               <Text
                 className={cn(
-                  'text-sm font-medium',
+                  'text-sm font-medium text-center',
                   isSelected ? 'text-[#ffffff]' : 'text-muted-foreground'
                 )}
               >
