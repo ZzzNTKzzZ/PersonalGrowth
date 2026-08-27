@@ -65,3 +65,4 @@ pids
 /server/generated/prisma
 .AGENT
 docs
+NEXT_SESSION_ROADMAP.md
