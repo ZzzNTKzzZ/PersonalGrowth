@@ -8,12 +8,15 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Text } from "@/components/ui/text";
+import { Card } from "@/components/ui/card";
 import JournalCard from "@/components/journal/card";
 import { Ionicons } from "@expo/vector-icons";
 import JournalModal from "@/components/journal/JournalModal";
 import { Journal, journalApi } from "@/services/journal.service";
+import { useRouter } from "expo-router";
 
 export default function JournalScreen() {
+  const router = useRouter();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedJournalToEdit, setSelectedJournalToEdit] = useState<
     Journal | null
@@ -78,9 +81,9 @@ export default function JournalScreen() {
           />
         }
       >
-        <View className="flex-row justify-between items-center mb-6">
+        <View className="flex-row justify-between items-center mb-4">
           <View>
-            <Text variant="h1" className="text-primary">
+            <Text variant="h1">
               Nhật ký
             </Text>
             <Text variant="muted" className="text-xs mt-0.5">
@@ -88,6 +91,30 @@ export default function JournalScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Daily Review Quick Access Card */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/journal/daily-review")}
+          className="mb-5"
+        >
+          <Card className="p-4 rounded-3xl bg-primary/10 border border-primary/25 flex-row items-center justify-between shadow-xs">
+            <View className="flex-row items-center gap-3 flex-1 pr-2">
+              <View className="w-11 h-11 rounded-2xl bg-primary items-center justify-center shadow-xs">
+                <Ionicons name="sparkles" size={22} color="#FFFFFF" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-bold text-sm text-foreground">
+                  Đánh giá cuối ngày
+                </Text>
+                <Text className="text-xs text-muted-foreground mt-0.5" numberOfLines={1}>
+                  Chấm điểm hiệu suất, cảm xúc & sức khỏe hôm nay
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#22C55E" />
+          </Card>
+        </TouchableOpacity>
 
         {isLoadingApi && journals.length === 0 ? (
           <View className="py-20 items-center justify-center">
