@@ -20,6 +20,7 @@ import WeekSummaryCard from "@/components/dashboard/WeekSummaryCard";
 import { dashboardApi, DashboardSummaryResponse } from "@/services/dashboard.service";
 import { taskApi, Task as ApiTask } from "@/services/task.service";
 import { habitApi, Habit as ApiHabit } from "@/services/habit.service";
+import { dayReviewApi, DayReview } from "@/services/day-review.service";
 
 interface HabitItem {
   id: string;
@@ -35,6 +36,7 @@ export default function HomeScreen() {
   const [summaryData, setSummaryData] = useState<DashboardSummaryResponse | null>(null);
   const [todayTasks, setTodayTasks] = useState<ApiTask[]>([]);
   const [habits, setHabits] = useState<HabitItem[]>([]);
+  const [todayReview, setTodayReview] = useState<DayReview | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -103,6 +105,23 @@ export default function HomeScreen() {
       } catch (e) {
         console.log("Habit API error:", e);
         setHabits([]);
+      }
+
+      // 4. Lấy Đánh giá ngày hôm nay từ Backend
+      try {
+        const reviewRes = await dayReviewApi.getByDate(todayStr);
+        const review = (
+          (reviewRes as any)?.data?.data ||
+          (reviewRes as any)?.data ||
+          reviewRes
+        ) as DayReview;
+        if (review && review.id) {
+          setTodayReview(review);
+        } else {
+          setTodayReview(null);
+        }
+      } catch (e) {
+        setTodayReview(null);
       }
     } finally {
       setIsRefreshing(false);
@@ -253,7 +272,7 @@ export default function HomeScreen() {
         </View>
 
         {/* 4 Thẻ Điểm Số Nhanh */}
-        <View className="flex-row flex-wrap justify-between pb-4">
+        <View className="flex-row flex-wrap justify-between pb-3">
           <DailySummaryCard
             name="Habit Score"
             data={chartData}
@@ -275,7 +294,7 @@ export default function HomeScreen() {
           <DailySummaryCard
             name="Mood Score"
             data={chartData}
-            total={78}
+            total={todayReview ? todayReview.moodScore * 10 : 80}
             change={5}
             color="#F59E0B"
             dotColor="#edab3a"
@@ -284,13 +303,50 @@ export default function HomeScreen() {
           <DailySummaryCard
             name="Well-being"
             data={chartData}
-            total={85}
+            total={
+              todayReview
+                ? Math.round(
+                    ((todayReview.productivity +
+                      todayReview.moodScore +
+                      todayReview.healthScore +
+                      todayReview.satisfaction) /
+                      4) *
+                      10
+                  )
+                : 85
+            }
             change={10}
             color="#EF4444"
             dotColor="#EF4444"
             icon="heart-outline"
           />
         </View>
+
+        {/* Daily Review Quick Access Card */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/journal/daily-review")}
+          className="mb-4"
+        >
+          <Card className="p-4 rounded-3xl bg-primary/10 border border-primary/25 flex-row items-center justify-between shadow-xs">
+            <View className="flex-row items-center gap-3 flex-1 pr-2">
+              <View className="w-10 h-10 rounded-2xl bg-primary items-center justify-center shadow-xs">
+                <Ionicons name="star" size={20} color="#FFFFFF" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-bold text-sm text-foreground">
+                  {todayReview ? "Đã tổng kết ngày hôm nay" : "Đánh giá & Tổng kết hôm nay"}
+                </Text>
+                <Text className="text-xs text-muted-foreground mt-0.5" numberOfLines={1}>
+                  {todayReview
+                    ? `Điểm trung bình: ${((todayReview.productivity + todayReview.moodScore + todayReview.healthScore + todayReview.satisfaction) / 4).toFixed(1)}/10 • Nhấn để chỉnh sửa`
+                    : "Dành 1 phút nhìn nhận lại hiệu suất & sức khỏe ✨"}
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#22C55E" />
+          </Card>
+        </TouchableOpacity>
 
         {/* Card Lịch trình hôm nay */}
         <Card className="px-5 py-4 mb-4 rounded-3xl bg-card border-border shadow-xs">
