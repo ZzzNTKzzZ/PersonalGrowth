@@ -380,7 +380,7 @@ export default function HabitsScreen() {
         {/* ==================== 4. HABIT CỦA TÔI CARD SECTION ==================== */}
         <Card className="rounded-3xl p-4 mb-4 bg-card border-border shadow-xs">
           {/* Header Row */}
-          <View className="flex-row items-center justify-between mb-3">
+          <View className="flex-row items-center justify-between ">
             <Text variant="h3">
               Habit của tôi
             </Text>
