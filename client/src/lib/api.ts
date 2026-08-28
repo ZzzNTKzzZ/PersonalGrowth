@@ -1,4 +1,6 @@
 import { Platform } from "react-native";
+import axios, { AxiosError, InternalAxiosRequestConfig} from 'axios'
+import * as SecureStore from "expo-secure-store"
 
 const getBaseUrl = () => {
   if (Platform.OS === "android") {
@@ -16,73 +18,117 @@ export const setAuthToken = (token: string | null) => {
   tokenStorage = token;
 };
 
-export const getAuthToken = () => tokenStorage;
-
-async function request<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
-
-  if (tokenStorage) {
-    headers["Authorization"] = `Bearer ${tokenStorage}`;
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    "Content-Type": 'application/json'
   }
+})
 
-  const config: RequestInit = {
-    ...options,
-    headers,
-  };
-
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || `API Error: ${response.status}`);
+apiClient.interceptors.request.use(
+  async (config: InternalAxiosRequestConfig) => {
+    try {
+      const accessToken = await SecureStore.getItemAsync("access_token");
+      if (accessToken && config.headers) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
+    } catch (error) {
+      console.error("Lỗi khi đọc token từ SecureStore: ", error);
     }
-
-    return data as T;
-  } catch (error: any) {
-    console.error(`[API Request Error] ${url}:`, error.message || error);
-    throw error;
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
+
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reson?: any) => void
+}> = []
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
 }
 
-export const api = {
-  get: <T>(endpoint: string, params?: Record<string, string>) => {
-    let queryString = "";
-    if (params) {
-      const searchParams = new URLSearchParams();
-      Object.entries(params).forEach(([key, val]) => {
-        if (val !== undefined && val !== null) {
-          searchParams.append(key, val);
-        }
-      });
-      const query = searchParams.toString();
-      if (query) queryString = `?${query}`;
-    }
-    return request<T>(`${endpoint}${queryString}`, { method: "GET" });
+apiClient.interceptors.response.use(
+  (response) => {
+    return response.data
   },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry? : boolean
+    }
 
-  post: <T>(endpoint: string, body?: any) =>
-    request<T>(endpoint, {
-      method: "POST",
-      body: body ? JSON.stringify(body) : undefined,
-    }),
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if(isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        })
+        .then((token) => {
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${token}`
+          }
+          return apiClient(originalRequest)
+        })
+        .catch(err => Promise.reject(err))
+      }
 
-  patch: <T>(endpoint: string, body?: any) =>
-    request<T>(endpoint, {
-      method: "PATCH",
-      body: body ? JSON.stringify(body) : undefined,
-    }),
+      originalRequest._retry = true
+      isRefreshing = true
 
-  delete: <T>(endpoint: string) =>
-    request<T>(endpoint, {
-      method: "DELETE",
-    }),
-};
+      try {
+        const refreshToken = await SecureStore.getItemAsync('refresh_token')
+        if (!refreshToken) {
+          throw new Error('Không có refresh token')
+        }
+        const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refreshToken,
+        })
+
+        const newToken = res.data
+        const newAccessToken = newToken.accessToken
+
+        await SecureStore.setItemAsync('access_token', newAccessToken)
+        if (newToken.refreshToken) {
+          await SecureStore.setItemAsync('refresh_token', newToken.refreshToken)
+        }
+
+        processQueue(null, newAccessToken)
+
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+        }
+
+        return apiClient(originalRequest)
+      } catch (refreshError) {
+        processQueue(refreshError, null )
+
+        await SecureStore.deleteItemAsync('access_token')
+        await SecureStore.deleteItemAsync('refresh_token')
+      } finally {
+        isRefreshing = false
+      }
+    }
+    return Promise.reject(error.response?.data)
+  }
+)
+ export const api = {
+      get: <T>(url: string, params?: Record<string, any>) =>
+        apiClient.get<any, T>(url, { params }),
+      post: <T>(url: string, data?: any) =>
+        apiClient.post<any, T>(url, data),
+      patch: <T>(url: string, data?: any) =>
+        apiClient.patch<any, T>(url, data),
+      delete: <T>(url: string) =>
+        apiClient.delete<any, T>(url),
+    };
