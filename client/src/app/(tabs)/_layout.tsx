@@ -42,7 +42,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="leaf" size={24} color={color} />,
         }}
       />
-    
+      <Tabs.Screen
+        name="journal"
+        options={{
+          title: 'Nhật ký',
+          tabBarIcon: ({ color }) => <Ionicons name="book-outline" size={24} color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
