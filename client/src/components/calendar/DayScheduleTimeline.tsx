@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { View, TouchableOpacity, DimensionValue, ViewStyle } from "react-native";
 import { Calendar } from "react-native-big-calendar";
-import { Ionicons } from "@expo/vector-icons";
+import { LucideIcon } from "lucide-react-native";
 import { Text } from "../ui/text";
 
 export type CalendarEvent = {
@@ -10,7 +10,7 @@ export type CalendarEvent = {
   start: Date;
   end: Date;
   color?: string; // Ví dụ: "#3B82F6", "#10B981", "#8B5CF6"
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: LucideIcon;
   description?: string;
 };
 

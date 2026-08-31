@@ -1,7 +1,8 @@
 import Logo from "@/components/icons/logo";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "@/components/ui/icon";
+import { Mail } from "lucide-react-native";
 import { useState } from "react";
 import { View } from "react-native";
 
@@ -18,14 +19,13 @@ export default function Login() {
           {"Đăng nhập để tiếp tục hành trình\nphát triển bản thân của bạn 🌱"}
         </Text>
       </View>
-
       <Input
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         placeholder="Nhập email của bạn..."
         keyboardType="email-address"
-        leftIcon={<Ionicons name="mail-outline" size={20} color="#9CA3AF" />}
+        leftIcon={<Icon as={Mail} size={20} color="#9CA3AF" />}
       />
     </View>
   );

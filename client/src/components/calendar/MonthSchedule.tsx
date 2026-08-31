@@ -1,7 +1,21 @@
 import React, { useMemo } from "react";
 import { View, TouchableOpacity } from "react-native";
 import { Calendar, CustomMarking } from "../ui/calendar";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "../ui/icon";
+import {
+  Briefcase,
+  BookOpen,
+  Dumbbell,
+  User,
+  Plane,
+  Lightbulb,
+  Calendar as CalendarIcon,
+  GitCommitHorizontal,
+  ChevronRight,
+  Clock,
+  CalendarX,
+  LucideIcon,
+} from "lucide-react-native";
 import { Text } from "../ui/text";
 import { Badge } from "../ui/badge";
 import { CalendarEvent } from "./DayScheduleTimeline";
@@ -18,17 +32,17 @@ type Props = {
 // Hệ thống màu theo danh mục sự kiện
 const CATEGORY_COLORS: Record<
   string,
-  { hex: string; bg: string; icon: keyof typeof Ionicons.glyphMap }
+  { hex: string; bg: string; icon: LucideIcon }
 > = {
-  "Công việc": { hex: "#3B82F6", bg: "bg-blue-500/15", icon: "briefcase-outline" },
-  "Học tập": { hex: "#8B5CF6", bg: "bg-violet-500/15", icon: "book-outline" },
-  "Sức khỏe": { hex: "#22C55E", bg: "bg-emerald-500/15", icon: "fitness-outline" },
-  "Cá nhân": { hex: "#F43F5E", bg: "bg-rose-500/15", icon: "person-outline" },
-  "Du lịch": { hex: "#F59E0B", bg: "bg-amber-500/15", icon: "airplane-outline" },
-  "Hội thảo": { hex: "#06B6D4", bg: "bg-cyan-500/15", icon: "bulb-outline" },
+  "Công việc": { hex: "#3B82F6", bg: "bg-blue-500/15", icon: Briefcase },
+  "Học tập": { hex: "#8B5CF6", bg: "bg-violet-500/15", icon: BookOpen },
+  "Sức khỏe": { hex: "#22C55E", bg: "bg-emerald-500/15", icon: Dumbbell },
+  "Cá nhân": { hex: "#F43F5E", bg: "bg-rose-500/15", icon: User },
+  "Du lịch": { hex: "#F59E0B", bg: "bg-amber-500/15", icon: Plane },
+  "Hội thảo": { hex: "#06B6D4", bg: "bg-cyan-500/15", icon: Lightbulb },
 };
 
-const DEFAULT_COLOR = { hex: "#3B82F6", bg: "bg-blue-500/15", icon: "calendar-outline" as const };
+const DEFAULT_COLOR = { hex: "#3B82F6", bg: "bg-blue-500/15", icon: CalendarIcon };
 
 const formatYYYYMMDD = (d: Date) => {
   const year = d.getFullYear();
@@ -175,7 +189,7 @@ export default function MonthScheduleTimeline({
         {/* Header Agenda */}
         <View className="flex-row items-center justify-between mb-3.5 px-1">
           <View className="flex-row items-center gap-2">
-            <Ionicons name="git-commit-outline" size={18} color="#22C55E" />
+            <Icon as={GitCommitHorizontal} size={18} color="#22C55E" />
             <Text className="font-bold text-sm text-foreground">
               {`Lịch trình ngày ${activeDate.getDate()}/${
                 activeDate.getMonth() + 1
@@ -197,7 +211,7 @@ export default function MonthScheduleTimeline({
               <Text className="text-[11px] font-semibold text-primary">
                 Xem dạng ngày
               </Text>
-              <Ionicons name="chevron-forward" size={12} color="#22C55E" />
+              <Icon as={ChevronRight} size={12} color="#22C55E" />
             </TouchableOpacity>
           )}
         </View>
@@ -246,8 +260,8 @@ export default function MonthScheduleTimeline({
                   >
                     <View className="flex-row items-center justify-between mb-1.5">
                       <View className="flex-row items-center gap-1">
-                        <Ionicons
-                          name="time-outline"
+                        <Icon
+                          as={Clock}
                           size={13}
                           color={itemColor}
                         />
@@ -268,8 +282,8 @@ export default function MonthScheduleTimeline({
                           style={{ backgroundColor: `${itemColor}1F` }}
                           className="flex-row items-center gap-1 px-2 py-0.5 rounded-lg"
                         >
-                          <Ionicons
-                            name={categoryConfig.icon}
+                          <Icon
+                            as={categoryConfig.icon}
                             size={11}
                             color={itemColor}
                           />
@@ -295,8 +309,8 @@ export default function MonthScheduleTimeline({
         ) : (
           /* Trạng thái trống */
           <View className="flex-1 items-center justify-center py-8 bg-background border border-dashed border-border rounded-xl">
-            <Ionicons
-              name="calendar-clear-outline"
+            <Icon
+              as={CalendarX}
               size={32}
               color="#9CA3AF"
             />

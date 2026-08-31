@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "@/components/ui/icon";
+import { Bell, Plus, Briefcase, Calendar as CalendarIcon } from "lucide-react-native";
 import { useState, useEffect } from "react";
 import { ScrollView, View, TouchableOpacity } from "react-native";
 import DayScheduleTimeline from "@/components/calendar/DayScheduleTimeline";
@@ -103,7 +104,7 @@ export default function Calendar(params: any) {
       id: t.id,
       name: t.name,
       category: t.category?.name || "Công việc",
-      icon: (t.category?.color ? "briefcase-outline" : "calendar-outline") as any,
+      icon: (t.category?.color ? Briefcase : CalendarIcon),
       color: t.category?.color || "#8B5CF6",
       startDate: new Date(t.startTime!),
       endDate: new Date(t.endTime!),
@@ -126,7 +127,7 @@ export default function Calendar(params: any) {
 
           <View className="flex-row gap-3 items-center">
             <View className="relative">
-              <Ionicons name="notifications-outline" size={28} />
+              <Icon as={Bell} size={28} />
               <View className="w-3 h-3 rounded-full bg-error absolute -top-0.5 -right-0.5 border-[1.5px] border-white z-10" />
             </View>
           </View>
@@ -243,7 +244,7 @@ export default function Calendar(params: any) {
         }}
         className="absolute bottom-6 right-6 w-14 h-14 rounded-full border-[#ffffff] border-2 bg-primary items-center justify-center shadow-lg  elevation-6 z-50"
       >
-        <Ionicons name="add" size={30} color="#FFFFFF" />
+        <Icon as={Plus} size={30} color="#FFFFFF" />
       </TouchableOpacity>
 
       <EventModal 

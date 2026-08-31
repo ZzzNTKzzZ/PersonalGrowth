@@ -8,7 +8,23 @@ import {
   TextInput,
   RefreshControl,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "@/components/ui/icon";
+import {
+  Dumbbell,
+  BookOpen,
+  Leaf,
+  Droplets,
+  Moon,
+  CheckCircle2,
+  Flame,
+  Trophy,
+  ChevronDown,
+  Clock,
+  Check,
+  Plus,
+  X,
+  LucideIcon,
+} from "lucide-react-native";
 import Svg, { Circle } from "react-native-svg";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
@@ -20,7 +36,7 @@ interface HabitItem {
   name: string;
   rule: string;
   detail: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: LucideIcon;
   color: string;
   bgColor: string;
   streakDays: number;
@@ -141,15 +157,13 @@ export default function HabitsScreen() {
             name: h.name,
             rule: h.frequency === "DAILY" ? "Hàng ngày" : "Hàng tuần",
             detail: "08:00",
-            icon: (
-              [
-                "fitness-outline",
-                "book-outline",
-                "leaf-outline",
-                "water-outline",
-                "moon-outline",
-              ][idx % 5]
-            ) as any,
+            icon: [
+              Dumbbell,
+              BookOpen,
+              Leaf,
+              Droplets,
+              Moon,
+            ][idx % 5],
             color: [
               "#22C55E",
               "#8B5CF6",
@@ -298,7 +312,7 @@ export default function HabitsScreen() {
                 {/* 1. Hoàn thành */}
                 <View className="items-center flex-1">
                   <View className="flex-row items-center gap-1">
-                    <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
+                    <Icon as={CheckCircle2} size={16} color="#22C55E" />
                     <Text className="font-extrabold text-sm text-foreground">
                       {completedCount} / {totalCount}
                     </Text>
@@ -311,7 +325,7 @@ export default function HabitsScreen() {
                 {/* 2. Streak hiện tại */}
                 <View className="items-center flex-1">
                   <View className="flex-row items-center gap-1">
-                    <Ionicons name="flame" size={16} color="#EF4444" />
+                    <Icon as={Flame} size={16} color="#EF4444" />
                     <Text className="font-extrabold text-sm text-foreground">
                       {currentStreakDays}
                     </Text>
@@ -324,7 +338,7 @@ export default function HabitsScreen() {
                 {/* 3. Streak tốt nhất */}
                 <View className="items-center flex-1">
                   <View className="flex-row items-center gap-1">
-                    <Ionicons name="trophy" size={16} color="#F59E0B" />
+                    <Icon as={Trophy} size={16} color="#F59E0B" />
                     <Text className="font-extrabold text-sm text-foreground">
                       {bestStreakDays}
                     </Text>
@@ -388,7 +402,7 @@ export default function HabitsScreen() {
               <Text variant="caption">
                 Sắp xếp
               </Text>
-              <Ionicons name="chevron-down" size={16} color="#6B7280" />
+              <Icon as={ChevronDown} size={16} color="#6B7280" />
             </TouchableOpacity>
           </View>
 
@@ -403,8 +417,8 @@ export default function HabitsScreen() {
                 <View
                   className={`w-11 h-11 rounded-2xl items-center justify-center mr-3 ${item.bgColor}`}
                 >
-                  <Ionicons
-                    name={item.icon}
+                  <Icon
+                    as={item.icon}
                     size={22}
                     color={item.color}
                   />
@@ -418,7 +432,7 @@ export default function HabitsScreen() {
                       {item.name}
                     </Text>
                     <View className="flex-row items-center gap-0.5">
-                      <Ionicons name="flame" size={12} color="#EF4444" />
+                      <Icon as={Flame} size={12} color="#EF4444" />
                       <Text className="text-[11px] font-semibold text-muted-foreground">
                         {item.streakDays} ngày
                       </Text>
@@ -432,8 +446,8 @@ export default function HabitsScreen() {
                     </Text>
                     <Text className="text-[11px] text-muted-foreground/60">•</Text>
                     <View className="flex-row items-center gap-0.5">
-                      <Ionicons
-                        name={item.name.includes("nước") ? "water" : "time-outline"}
+                      <Icon
+                        as={item.name.includes("nước") ? Droplets : Clock}
                         size={11}
                         color={item.color}
                       />
@@ -471,7 +485,7 @@ export default function HabitsScreen() {
                 >
                   {item.checked ? (
                     <View className="w-7 h-7 rounded-full bg-emerald-500 items-center justify-center shadow-xs">
-                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                      <Icon as={Check} size={16} color="#FFFFFF" />
                     </View>
                   ) : (
                     <View className="w-7 h-7 rounded-full border-2 border-muted-foreground/30 bg-transparent" />
@@ -487,7 +501,7 @@ export default function HabitsScreen() {
             onPress={() => setIsAddModalOpen(true)}
             className="w-full py-3 bg-emerald-500 rounded-xl items-center justify-center flex-row gap-1.5"
           >
-            <Ionicons name="add" size={18} color="#fff" />
+            <Icon as={Plus} size={18} color="#fff" />
             <Text className="font-bold text-md text-[#fff]">
               Thêm habit mới
             </Text>
@@ -542,7 +556,7 @@ export default function HabitsScreen() {
                 Thêm thói quen mới
               </Text>
               <TouchableOpacity onPress={() => setIsAddModalOpen(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Icon as={X} size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
 

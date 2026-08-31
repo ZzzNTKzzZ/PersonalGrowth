@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { View, TouchableOpacity, DimensionValue, ViewStyle } from "react-native";
 import { Calendar } from "react-native-big-calendar";
-import { Ionicons } from "@expo/vector-icons";
 import { Text } from "../ui/text";
 import { CalendarEvent } from "./DayScheduleTimeline";
 

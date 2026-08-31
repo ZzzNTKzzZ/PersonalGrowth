@@ -10,7 +10,16 @@ import {
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import JournalCard from "@/components/journal/card";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "@/components/ui/icon";
+import {
+  Sparkles,
+  ChevronRight,
+  BookOpen,
+  Plus,
+  Flower2,
+  Coffee,
+  Dumbbell,
+} from "lucide-react-native";
 import JournalModal from "@/components/journal/JournalModal";
 import { Journal, journalApi } from "@/services/journal.service";
 import { useRouter } from "expo-router";
@@ -101,7 +110,7 @@ export default function JournalScreen() {
           <Card className="p-4 rounded-3xl bg-primary/10 border border-primary/25 flex-row items-center justify-between shadow-xs">
             <View className="flex-row items-center gap-3 flex-1 pr-2">
               <View className="w-11 h-11 rounded-2xl bg-primary items-center justify-center shadow-xs">
-                <Ionicons name="sparkles" size={22} color="#FFFFFF" />
+                <Icon as={Sparkles} size={22} color="#FFFFFF" />
               </View>
               <View className="flex-1">
                 <Text className="font-bold text-sm text-foreground">
@@ -112,7 +121,7 @@ export default function JournalScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#22C55E" />
+            <Icon as={ChevronRight} size={18} color="#22C55E" />
           </Card>
         </TouchableOpacity>
 
@@ -125,7 +134,7 @@ export default function JournalScreen() {
           </View>
         ) : journals.length === 0 ? (
           <View className="py-16 items-center justify-center bg-card rounded-3xl p-6 border border-border">
-            <Ionicons name="book-outline" size={48} color="#9CA3AF" />
+            <Icon as={BookOpen} size={48} color="#9CA3AF" />
             <Text variant="h3" className="mt-3 text-center">
               Chưa có bài nhật ký nào
             </Text>
@@ -141,13 +150,13 @@ export default function JournalScreen() {
                 <JournalCard
                   key={j.id}
                   iconName={
-                    ([
-                      "flower",
-                      "cafe",
-                      "fitness",
-                      "sparkles",
-                      "book",
-                    ][idx % 5]) as any
+                    [
+                      Flower2,
+                      Coffee,
+                      Dumbbell,
+                      Sparkles,
+                      BookOpen,
+                    ][idx % 5]
                   }
                   name={j.name || "Nhật ký không tên"}
                   date={new Date(j.createdAt)}
@@ -165,7 +174,7 @@ export default function JournalScreen() {
         onPress={handleCreateNew}
         className="absolute bottom-6 right-6 w-14 h-14 rounded-full border-[#ffffff] border-2 bg-primary items-center justify-center shadow-lg elevation-6 z-50"
       >
-        <Ionicons name="add" size={30} color="#FFFFFF" />
+        <Icon as={Plus} size={30} color="#FFFFFF" />
       </TouchableOpacity>
 
       <JournalModal

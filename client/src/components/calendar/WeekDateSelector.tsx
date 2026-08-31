@@ -1,6 +1,7 @@
 import { View, TouchableOpacity } from "react-native";
 import { Card } from "../ui/card";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "../ui/icon";
+import { ChevronLeft, ChevronRight, LucideIcon } from "lucide-react-native";
 import { Text } from "../ui/text";
 import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
@@ -16,7 +17,7 @@ const EVENT_COLORS = [
 export type AllDayEvent = {
   name: string;
   category: string;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: LucideIcon;
   color?: string;
   bg?: string;
   startDate?: Date | string;
@@ -146,7 +147,7 @@ export default function WeekDateSelector({
             style={{ width: 50 }}
             className="items-center justify-center py-1"
           >
-            <Ionicons name="chevron-back" size={22} color={"#6B7280"} />
+            <Icon as={ChevronLeft} size={22} color={"#6B7280"} />
           </TouchableOpacity>
 
           <View className="flex-1 flex-row items-center justify-between">
@@ -213,7 +214,7 @@ export default function WeekDateSelector({
             style={{ width: 24 }}
             className="items-center justify-center py-1 pr-1"
           >
-            <Ionicons name="chevron-forward" size={22} color={"#6B7280"} />
+            <Icon as={ChevronRight} size={22} color={"#6B7280"} />
           </TouchableOpacity>
         </View>
 

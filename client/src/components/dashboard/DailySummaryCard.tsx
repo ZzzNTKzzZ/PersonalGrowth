@@ -1,7 +1,8 @@
 import React, { useId } from "react";
 import { View } from "react-native";
 import { Card } from "../ui/card";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "../ui/icon";
+import { ArrowUp, LucideIcon } from "lucide-react-native";
 import { Text } from "../ui/text";
 import { LineChart } from "react-native-gifted-charts";
 import { LinearGradient, Stop } from "react-native-svg";
@@ -15,7 +16,7 @@ type Props = {
     }[],
     color: string,
     dotColor: string,
-    icon: keyof typeof Ionicons.glyphMap
+    icon: LucideIcon
 }
 
 export default function DailySummaryCard({name, change, total, data, color, dotColor, icon}: Props) {
@@ -28,7 +29,7 @@ export default function DailySummaryCard({name, change, total, data, color, dotC
                 className="p-2 rounded-full border border-border items-center justify-center"
                 style={{ backgroundColor: `${color}33` }}
               >
-                <Ionicons name={icon} color={color} size={16} />
+                <Icon as={icon} color={color} size={16} />
               </View>
               <Text variant={"h4"}>{name}</Text>
             </View>
@@ -39,7 +40,7 @@ export default function DailySummaryCard({name, change, total, data, color, dotC
                 </Text>
                 <View className="flex-column items-start">
                   <View className="flex-row gap-1 items-center">
-                    <Ionicons name="arrow-up" color={color} size={16} />
+                    <Icon as={ArrowUp} color={color} size={16} />
                     <Text variant={"h2"} style={{ color }} className="text-base p-0">
                       {change} %
                     </Text>

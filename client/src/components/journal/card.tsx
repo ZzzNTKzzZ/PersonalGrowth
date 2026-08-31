@@ -1,5 +1,6 @@
 import { View, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "@/components/ui/icon";
+import { LucideIcon } from "lucide-react-native";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Badge } from "../ui/badge";
@@ -12,7 +13,7 @@ export default function JournalCard({
   content,
   onPress,
 }: {
-  iconName?: keyof typeof Ionicons.glyphMap;
+  iconName?: LucideIcon;
   name: string;
   date: Date;
   mood?: string;
@@ -55,7 +56,7 @@ export default function JournalCard({
 
             <View className="w-12 h-12 rounded-2xl bg-primary/5 justify-center items-center">
               {iconName && (
-                <Ionicons name={iconName} size={24} color="#22C55E" />
+                <Icon as={iconName} size={24} color="#22C55E" />
               )}
             </View>
           </View>

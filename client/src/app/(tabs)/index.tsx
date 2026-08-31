@@ -7,7 +7,19 @@ import {
   Dimensions,
   RefreshControl,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "@/components/ui/icon";
+import {
+  Bell,
+  CircleUser,
+  Star,
+  ChevronRight,
+  Flame,
+  Leaf,
+  Briefcase,
+  Smile,
+  Heart,
+  CheckCircle2,
+} from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
@@ -214,28 +226,28 @@ export default function HomeScreen() {
       name: "Công việc",
       total: taskTotal,
       done: taskDone,
-      icon: "briefcase-outline",
+      icon: Briefcase,
       color: "#3B82F6",
     },
     {
       name: "Thói quen",
       total: habitTotal,
       done: habitDone,
-      icon: "checkmark-circle-outline",
+      icon: CheckCircle2,
       color: "#10B981",
     },
     {
       name: "Hoàn thành",
       total: 100,
       done: Math.round((habitRate + taskRate) / 2) || 0,
-      icon: "star-outline",
+      icon: Star,
       color: "#F59E0B",
     },
     {
       name: "Streak kỷ lục",
       total: maxStreak,
       done: maxStreak,
-      icon: "flame-outline",
+      icon: Flame,
       color: "#EF4444",
     },
   ];
@@ -264,10 +276,10 @@ export default function HomeScreen() {
 
           <View className="flex-row gap-3 items-center">
             <View className="relative">
-              <Ionicons name="notifications-outline" size={26} color="#374151" />
+              <Icon as={Bell} size={26} color="#374151" />
               <View className="w-2.5 h-2.5 rounded-full bg-error absolute top-0 right-0 border border-white z-10" />
             </View>
-            <Ionicons name="person-circle-outline" size={36} color="#374151" />
+            <Icon as={CircleUser} size={36} color="#374151" />
           </View>
         </View>
 
@@ -280,7 +292,7 @@ export default function HomeScreen() {
             change={12}
             color="#22C55E"
             dotColor="#22C55E"
-            icon="leaf"
+            icon={Leaf}
           />
           <DailySummaryCard
             name="Task Score"
@@ -289,7 +301,7 @@ export default function HomeScreen() {
             change={8}
             color="#3B82F6"
             dotColor="#3B82F6"
-            icon="briefcase-outline"
+            icon={Briefcase}
           />
           <DailySummaryCard
             name="Mood Score"
@@ -298,7 +310,7 @@ export default function HomeScreen() {
             change={5}
             color="#F59E0B"
             dotColor="#edab3a"
-            icon="happy-outline"
+            icon={Smile}
           />
           <DailySummaryCard
             name="Well-being"
@@ -318,7 +330,7 @@ export default function HomeScreen() {
             change={10}
             color="#EF4444"
             dotColor="#EF4444"
-            icon="heart-outline"
+            icon={Heart}
           />
         </View>
 
@@ -331,7 +343,7 @@ export default function HomeScreen() {
           <Card className="p-4 rounded-3xl bg-primary/10 border border-primary/25 flex-row items-center justify-between shadow-xs">
             <View className="flex-row items-center gap-3 flex-1 pr-2">
               <View className="w-10 h-10 rounded-2xl bg-primary items-center justify-center shadow-xs">
-                <Ionicons name="star" size={20} color="#FFFFFF" />
+                <Icon as={Star} size={20} color="#FFFFFF" />
               </View>
               <View className="flex-1">
                 <Text className="font-bold text-sm text-foreground">
@@ -344,7 +356,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#22C55E" />
+            <Icon as={ChevronRight} size={18} color="#22C55E" />
           </Card>
         </TouchableOpacity>
 
@@ -361,8 +373,8 @@ export default function HomeScreen() {
               <Text className="text-secondary text-xs font-semibold">
                 Xem tất cả
               </Text>
-              <Ionicons
-                name="chevron-forward-outline"
+              <Icon
+                as={ChevronRight}
                 color={"#3B82F6"}
                 size={14}
               />
@@ -424,8 +436,8 @@ export default function HomeScreen() {
               <Text className="text-secondary text-xs font-semibold">
                 Xem tất cả
               </Text>
-              <Ionicons
-                name="chevron-forward-outline"
+              <Icon
+                as={ChevronRight}
                 color={"#3B82F6"}
                 size={14}
               />
@@ -462,7 +474,7 @@ export default function HomeScreen() {
                     borderColor: "rgba(245, 158, 11, 0.25)",
                   }}
                 >
-                  <Ionicons name="flame" color="#F59E0B" size={12} />
+                  <Icon as={Flame} color="#F59E0B" size={12} />
                   <Text
                     style={{ color: "#F59E0B" }}
                     className="font-bold text-[11px]"
@@ -481,7 +493,7 @@ export default function HomeScreen() {
             Chuỗi ngày
           </Text>
           <View className="flex-row items-center mt-2">
-            <Ionicons name="flame" color={"#EF4444"} size={28} />
+            <Icon as={Flame} color={"#EF4444"} size={28} />
             <View className="flex-row items-center gap-1.5 ml-1.5">
               <Text variant="h2">{maxStreak}</Text>
               <Text variant="muted" className="text-xs">
@@ -534,8 +546,8 @@ export default function HomeScreen() {
                     className="p-1.5 rounded-lg border border-border items-center justify-center"
                     style={{ backgroundColor: `${i.color}25` }}
                   >
-                    <Ionicons
-                      name={i.icon as keyof typeof Ionicons.glyphMap}
+                    <Icon
+                      as={i.icon}
                       color={i.color}
                       size={18}
                     />

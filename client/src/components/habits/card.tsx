@@ -1,5 +1,6 @@
 import { View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '@/components/ui/icon';
+import { LucideIcon } from 'lucide-react-native';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,7 +14,7 @@ export default function HabitCard({
   setChecked,
   indicatorClassName
 }: {
-  iconName?: keyof typeof Ionicons.glyphMap;
+  iconName?: LucideIcon;
   name: string;
   rule: string;
   checked: boolean;
@@ -25,7 +26,7 @@ export default function HabitCard({
     <Card className="flex-row justify-between items-center mb-3 rounded-2xl p-4 shadow-sm border-border bg-card">
       <View className="flex-row items-center">
         <View className="w-12 h-12 rounded-2xl bg-primary/10 justify-center items-center mr-4">
-          {iconName && <Ionicons name={iconName} size={24} color="#22C55E" />}
+          {iconName && <Icon as={iconName} size={24} color="#22C55E" />}
         </View>
         <View className="justify-center">
           <Text 

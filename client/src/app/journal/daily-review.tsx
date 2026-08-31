@@ -11,14 +11,27 @@ import {
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "@/components/ui/icon";
+import {
+  Zap,
+  Smile,
+  Dumbbell,
+  Star,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Trophy,
+  PenSquare,
+  CheckCheck,
+  LucideIcon,
+} from "lucide-react-native";
 import { dayReviewApi, DayReview } from "@/services/day-review.service";
 
 interface MetricConfig {
   key: "productivity" | "moodScore" | "healthScore" | "satisfaction";
   title: string;
   subtitle: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: LucideIcon;
   color: string;
   bgColor: string;
   getFeedback: (val: number) => { text: string; emoji: string };
@@ -29,7 +42,7 @@ const METRICS: MetricConfig[] = [
     key: "productivity",
     title: "Hiệu suất làm việc",
     subtitle: "Mức độ hoàn thành mục tiêu và tập trung hôm nay",
-    icon: "flash-outline",
+    icon: Zap,
     color: "#3B82F6",
     bgColor: "bg-blue-500/10",
     getFeedback: (val: number) => {
@@ -43,7 +56,7 @@ const METRICS: MetricConfig[] = [
     key: "moodScore",
     title: "Tâm trạng & Cảm xúc",
     subtitle: "Cảm nhận tinh thần và năng lượng tích cực của bạn",
-    icon: "happy-outline",
+    icon: Smile,
     color: "#F59E0B",
     bgColor: "bg-amber-500/10",
     getFeedback: (val: number) => {
@@ -57,7 +70,7 @@ const METRICS: MetricConfig[] = [
     key: "healthScore",
     title: "Sức khỏe & Thể chất",
     subtitle: "Vận động, chế độ dinh dưỡng và giấc ngủ",
-    icon: "fitness-outline",
+    icon: Dumbbell,
     color: "#10B981",
     bgColor: "bg-emerald-500/10",
     getFeedback: (val: number) => {
@@ -71,7 +84,7 @@ const METRICS: MetricConfig[] = [
     key: "satisfaction",
     title: "Mức độ hài lòng",
     subtitle: "Sự trọn vẹn và ý nghĩa của ngày hôm nay",
-    icon: "star-outline",
+    icon: Star,
     color: "#8B5CF6",
     bgColor: "bg-purple-500/10",
     getFeedback: (val: number) => {
@@ -217,7 +230,7 @@ export default function DailyReviewScreen() {
           onPress={() => router.back()}
           className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center"
         >
-          <Ionicons name="arrow-back" size={20} color="#374151" />
+          <Icon as={ArrowLeft} size={20} color="#374151" />
         </TouchableOpacity>
         <Text variant="h3" className="font-bold">
           Đánh giá cuối ngày
@@ -243,7 +256,7 @@ export default function DailyReviewScreen() {
         {/* Date Selector Navigation */}
         <View className="flex-row items-center justify-between bg-card border border-border rounded-2xl px-4 py-3 mb-4 shadow-xs">
           <TouchableOpacity onPress={handlePrevDay} className="p-1">
-            <Ionicons name="chevron-back" size={22} color="#6B7280" />
+            <Icon as={ChevronLeft} size={22} color="#6B7280" />
           </TouchableOpacity>
           <View className="items-center">
             <Text className="font-bold text-sm text-foreground">
@@ -259,7 +272,7 @@ export default function DailyReviewScreen() {
             </Text>
           </View>
           <TouchableOpacity onPress={handleNextDay} className="p-1">
-            <Ionicons name="chevron-forward" size={22} color="#6B7280" />
+            <Icon as={ChevronRight} size={22} color="#6B7280" />
           </TouchableOpacity>
         </View>
 
@@ -294,7 +307,7 @@ export default function DailyReviewScreen() {
                   </Text>
                 </View>
                 <View className="w-16 h-16 rounded-2xl bg-primary items-center justify-center shadow-sm">
-                  <Ionicons name="trophy-outline" size={32} color="#FFFFFF" />
+                  <Icon as={Trophy} size={32} color="#FFFFFF" />
                 </View>
               </View>
             </Card>
@@ -315,8 +328,8 @@ export default function DailyReviewScreen() {
                       <View
                         className={`w-9 h-9 rounded-xl items-center justify-center ${metric.bgColor}`}
                       >
-                        <Ionicons
-                          name={metric.icon}
+                        <Icon
+                          as={metric.icon}
                           size={20}
                           color={metric.color}
                         />
@@ -393,7 +406,7 @@ export default function DailyReviewScreen() {
             {/* Reflection Note Card */}
             <Card className="p-5 mb-6 rounded-3xl bg-card border-border shadow-xs">
               <View className="flex-row items-center gap-2 mb-2">
-                <Ionicons name="create-outline" size={20} color="#10B981" />
+                <Icon as={PenSquare} size={20} color="#10B981" />
                 <Text className="font-bold text-sm text-foreground">
                   Ghi chú suy ngẫm & Bài học
                 </Text>
@@ -430,7 +443,7 @@ export default function DailyReviewScreen() {
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <>
-                  <Ionicons name="checkmark-done-circle" size={20} color="#FFFFFF" />
+                  <Icon as={CheckCheck} size={20} color="#FFFFFF" />
                   <Text className="font-bold text-base text-white">
                     {existingReviewId ? "Cập nhật đánh giá ngày" : "Lưu đánh giá ngày"}
                   </Text>

@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '@/components/ui/icon';
+import { Home, Calendar as CalendarIcon, Leaf, BookOpen } from 'lucide-react-native';
 
 export default function TabLayout() {
   const colorScheme = 'light';
@@ -25,28 +26,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Icon as={Home} size={24} color={color} />,
         }}
       />
       <Tabs.Screen 
         name='calendar'
         options={{
           title: "Lịch trình",
-          tabBarIcon: ({color}) => <Ionicons name='calendar-outline' size={24} color={color}/>,
+          tabBarIcon: ({color}) => <Icon as={CalendarIcon} size={24} color={color}/>,
         }}
       />
       <Tabs.Screen
         name="habits"
         options={{
           title: 'Habits',
-          tabBarIcon: ({ color }) => <Ionicons name="leaf" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Icon as={Leaf} size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="journal"
         options={{
           title: 'Nhật ký',
-          tabBarIcon: ({ color }) => <Ionicons name="book-outline" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Icon as={BookOpen} size={24} color={color} />,
         }}
       />
     </Tabs>

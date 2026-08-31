@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, TouchableOpacity } from "react-native";
 import { Calendar as RNCalendar, CalendarProps } from "react-native-calendars";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "./icon";
+import { Flame } from "lucide-react-native";
 import { Text } from "./text";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +65,7 @@ export function Calendar({
             {/* 1. Icon Lửa (Streak) góc trên bên phải */}
             {isStreak && (
               <View className="absolute top-0.5 right-0.5 z-20">
-                <Ionicons name="flame" size={14} color="#F59E0B" />
+                <Icon as={Flame} size={14} color="#F59E0B" />
               </View>
             )}
 
