@@ -10,6 +10,8 @@
 // 1. CHUẨN PHẢN HỒI API (COMMON API RESPONSES & PAGINATION)
 // ============================================================================
 
+export type TASK_STATUS = "Todo" | "In Progress" | "Done";
+export type MOOD =   "Very Happy" | "Happy" | "Normal" | "Sad" | "Very Sad"
 export interface ApiResponse<T = any> {
   success: boolean;
   status: number;

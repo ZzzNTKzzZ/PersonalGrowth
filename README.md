@@ -57,8 +57,8 @@ Hệ thống ứng dụng di động quản lý phát triển cá nhân toàn di
 * **Styling**: NativeWind (`v4`), Tailwind CSS, Class Variance Authority (`cva`).
 * **State & Storage**: React Context API (`AuthProvider`), `expo-secure-store`.
 * **Networking**: `axios` (với Request/Response Interceptors & Queue Retry).
-* **Components**: UI Component System (`<Card>`, `<Calendar>`, `<Badge>`, `<SegmentedControl>`, `<Checkbox>`).
-* **Charts & Graphics**: `react-native-gifted-charts`, `react-native-svg`, Ionicons (`@expo/vector-icons`).
+* **UI Component System**: Design System gồm `<Icon>`, `<Card>`, `<Calendar>`, `<Badge>`, `<Button>`, `<Input>`, `<SegmentedControl>`, `<Checkbox>`, `<ToggleGroup>`.
+* **Icons & Graphics**: `lucide-react-native` (được tối ưu hóa qua custom [`<Icon>`](client/src/components/ui/icon.tsx) với `cssInterop`), `react-native-svg`, `react-native-gifted-charts`.
 
 ### **Backend (API Server)**
 * **Framework**: NestJS (TypeScript).
